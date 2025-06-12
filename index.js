@@ -1,23 +1,20 @@
 const express = require("express");
+require("dotenv").config();
+const session = require("express-session");
 const { connectDB } = require("./config/connectDB");
+const postRouter = require("./src/routes/postRoute");
 const bodyParser = require("body-parser");
 const userRoutes = require("./src/routes/userRoutes");
 const authRoutes = require("./src/routes/authRoutes");
-
-require("dotenv").config();
-const session = require("express-session");
-const postRouter = require("./src/routes/postRoute");
 
 const app = express();
 
 connectDB();
 
-// Middleware
 app.use(bodyParser.json());
 
-// Routes
-app.use("/", userRoutes);
-app.use("/", authRoutes);
+app.use("/user", userRoutes);
+app.use("/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.json("I am alive...!");
@@ -30,7 +27,7 @@ app.use(
     saveUninitialized: false,
     cookie: { maxAge: parseInt(process.env.JWT_EXPIRE) },
   })
-); //6 hr
+);
 
 app.use("/post", postRouter);
 
