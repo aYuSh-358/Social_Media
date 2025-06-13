@@ -6,15 +6,13 @@ const postRouter = require("./src/routes/postRoute");
 const bodyParser = require("body-parser");
 const userRoutes = require("./src/routes/userRoutes");
 const authRoutes = require("./src/routes/authRoutes");
-
+const path = require("path");
 const app = express();
 
 connectDB();
 
 app.use(bodyParser.json());
-
-app.use("/user", userRoutes);
-app.use("/auth", authRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.json("I am alive...!");
@@ -29,12 +27,11 @@ app.use(
   })
 );
 
+app.use("/user", userRoutes);
+app.use("/auth", authRoutes);
 app.use("/post", postRouter);
+app.use("/api", require("./src/routes/requestRoutes"));
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on ${process.env.PORT}`);
 });
-
-
-
-app.use('/api', require('./src/routes/requestRoutes'));

@@ -29,77 +29,178 @@ module.exports.createPost = async (req, res) => {
   }
 };
 
-module.exports.getUserPost = async (req, res) => {
+module.exports.getPosts = async (req, res) => {
   try {
-    userId = req.params.id;
-    if (!userId) {
-      res.status(400).json({ Status: "400", message: "User Id is required" });
-    }
-    const users = await User.findById(userId);
-
-    if (!users) {
-      res.status(500).json({ Status: "500", message: "User not found" });
-    }
-
-    const posts = await Post.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(userId),
+    const user = req.body;
+    if (user) {
+      const userId = user.id;
+      if (!userId) {
+        res.status(400).json({ Status: "400", message: "User Id is required" });
+      }
+      const userdata = await User.findById(userId);
+      if (!userdata) {
+        res.status(500).json({ Status: "500", message: "User not found" });
+      }
+      const posts = await Post.aggregate([
+        {
+          $match: {
+            userId: new mongoose.Types.ObjectId(userId),
+          },
         },
-      },
-    ]);
+        // {
+        //   $lookup: {
+        //     from: "comments",
+        //     localField: "_id",
+        //     foreignField: "postId",
+        //     as: "comment",
+        //   },
+        // },
+        // { $unwind: "$comment" },
+      ]);
 
-    if (posts.length == 0) {
+      const data = [];
+      posts.map((post) => {
+        data.push({
+          id: post._id,
+          post: `http://localhost:5000/uploads/posts/${post.post}`,
+          userId: post.userId,
+          LikeBy: post.likeBy,
+        });
+      });
       res
-        .status(500)
-        .json({ Status: "500", message: "No posts found for the users" });
-    }
-    const data = [];
-    posts.map((post) => {
-      data.push({
-        id: post._id,
-        post: `http://localhost:5000/uploads/posts/${post.post}`,
-        userId: post.userId,
-        LikeBy: post.likeBy,
-      });
-    });
-    // console.log(data);
-    res.status(200).json({ Status: "200", message: "User posts", data: data });
-  } catch (error) {
-    res.status(500).json({
-      Status: "500",
-      message: "Problem while fetch user posts",
-      Error: error,
-    });
-  }
-};
-
-module.exports.getAllUserPost = async (req, res) => {
-  try {
-    const permission = "1";
-    const posts = await Post.aggregate([
-      {
-        $match: {
-          permission: permission,
+        .status(200)
+        .json({ Status: "200", message: "User posts", data: data });
+    } else {
+      // if (!user) {
+      const permission = "1";
+      const posts = await Post.aggregate([
+        {
+          $match: {
+            permission: permission,
+          },
         },
-      },
-      {
-        $project: { post: 1, userId: 1 },
-      },
-    ]);
+        {
+          $project: { post: 1, userId: 1 },
+        },
+      ]);
 
-    const data = [];
-    posts.map((post) => {
-      data.push({
-        post: `http://localhost:5000/uploads/posts/${post.post}`,
-        userId: post.userId,
+      const data = [];
+      posts.map((post) => {
+        data.push({
+          post: `http://localhost:5000/uploads/posts/${post.post}`,
+          userId: post.userId,
+        });
       });
-    });
-    res.status(200).json({ Status: "200", data });
+      res.status(200).json({ Status: "200", data });
+    }
   } catch (error) {
     res
       .status(500)
       .json({ Status: "500", message: "Fail to fetch the post data" });
+  }
+};
+
+// module.exports.getUserPost = async (req, res) => {
+//   try {
+//     userId = req.params.id;
+//     if (!userId) {
+//       res.status(400).json({ Status: "400", message: "User Id is required" });
+//     }
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       res.status(500).json({ Status: "500", message: "User not found" });
+//     }
+
+//     const posts = await Post.aggregate([
+//       {
+//         $match: {
+//           userId: new mongoose.Types.ObjectId(userId),
+//         },
+//       },
+//       // {
+//       //   $lookup: {
+//       //     from: "comments",
+//       //     localField: "_id",
+//       //     foreignField: "postId",
+//       //     as: "comment",
+//       //   },
+//       // },
+//       // { $unwind: "$comment" },
+//     ]);
+
+//     const data = [];
+//     posts.map((post) => {
+//       data.push({
+//         id: post._id,
+//         post: `http://localhost:5000/uploads/posts/${post.post}`,
+//         userId: post.userId,
+//         LikeBy: post.likeBy,
+//       });
+//     });
+//     // console.log(data);
+//     res.status(200).json({ Status: "200", message: "User posts", data: data });
+//   } catch (error) {
+//     res.status(500).json({
+//       Status: "500",
+//       message: "Problem while fetch user posts",
+//       Error: error,
+//     });
+//   }
+// };
+
+// module.exports.getAllUserPost = async (req, res) => {
+//   try {
+//     const permission = "1";
+//     const posts = await Post.aggregate([
+//       {
+//         $match: {
+//           permission: permission,
+//         },
+//       },
+//       {
+//         $project: { post: 1, userId: 1 },
+//       },
+//     ]);
+
+//     const data = [];
+//     posts.map((post) => {
+//       data.push({
+//         post: `http://localhost:5000/uploads/posts/${post.post}`,
+//         userId: post.userId,
+//       });
+//     });
+//     res.status(200).json({ Status: "200", data });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({ Status: "500", message: "Fail to fetch the post data" });
+//   }
+// };
+
+module.exports.updatePost = async (req, res) => {
+  try {
+    const postId = req.body.postId;
+    const postName = req.file.filename;
+    const permission = req.body.permission;
+    // console.log(postName, permission, postId);
+    const post = await Post.findById(postId);
+    console.log(post);
+    if (!post) {
+      res
+        .status(500)
+        .message({ Status: "500", message: "Update Post Data is missing" });
+    }
+
+    post.post = postName || post.post;
+    post.permission = permission || post.permission;
+    await post.save();
+    res
+      .status(200)
+      .json({ Status: "200", message: "Post updated successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ Status: "500", message: "Faild to update the post" });
   }
 };
 
@@ -146,9 +247,9 @@ module.exports.likePosts = async (req, res) => {
 
 module.exports.addComment = async (req, res) => {
   try {
+    console.log(req.params.id);
     const userId = req.params.id;
     const { postId, comment } = req.body;
-    console.log(comment);
     if (!userId || !postId || !comment) {
       res
         .status(400)
@@ -164,10 +265,9 @@ module.exports.addComment = async (req, res) => {
     }
 
     const newComment = new Comment({ userId, postId, comment });
-    if (!newComment) {
-      res.status(500).json({ Status: "500", message: "No comments Found" });
-    }
-
+    // if (!newComment) {
+    //   res.status(500).json({ Status: "500", message: "No comments Found" });
+    // }
     await newComment.save();
     res
       .status(200)

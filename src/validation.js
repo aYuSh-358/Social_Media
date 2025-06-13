@@ -84,6 +84,7 @@ exports.validator = (method) => {
           .withMessage("DOB must be a valid date (YYYY-MM-DD format)"),
 
         body("userMobileNo")
+          .optional()
           .notEmpty()
           .withMessage("Mobile Number is required")
           .isLength({ min: 10, max: 10 })
