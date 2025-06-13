@@ -1,8 +1,8 @@
 const express = require("express");
 const { connectDB } = require("./config/connectDB");
 const bodyParser = require("body-parser");
-const userRoutes = require("./src/routes/userRoutes");
 const authRoutes = require("./src/routes/authRoutes");
+
 
 require("dotenv").config();
 const session = require("express-session");
@@ -16,8 +16,8 @@ connectDB();
 app.use(bodyParser.json());
 
 // Routes
-app.use("/", userRoutes);
-app.use("/", authRoutes);
+
+app.use("/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.json("I am alive...!");

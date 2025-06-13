@@ -1,7 +1,8 @@
 const { validationResult } = require('express-validator');
-const User = require("../models/userModel");
+const User = require("../models/authModel");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 //Register API
@@ -11,9 +12,9 @@ exports.registerUser = async (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-
     try {
         const { userName, userEmail, userPassword, userDOB, userMobileNo, userAddress } = req.body;
+        const userProfilePhoto = req.file;
 
         const existingUser = await User.findOne({ userEmail });
         if (existingUser) {
@@ -21,6 +22,7 @@ exports.registerUser = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(userPassword, 10);
+        //console.log(userProfilePhoto);
 
         const user = new User({
             userName,
@@ -28,16 +30,73 @@ exports.registerUser = async (req, res) => {
             userPassword: hashedPassword,
             userDOB,
             userMobileNo,
-            userAddress
+            userAddress,
+            userProfilePhoto: userProfilePhoto.filename
         });
+
+        console.log(user);
+
 
         await user.save();
         res.status(201).json({ message: 'User registered successfully', user });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.log(error);
+
+        res.status(500).json({ Status: '500', error: error.message });
+    }
+};
+exports.getAllRegisterUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching users', error });
     }
 };
 
+exports.getRegisterUserById = async (req, res) => {
+    try {
+
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user', error });
+    }
+};
+
+exports.updateRegisterUser = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const updateRegisterUser = await User.findByIdAndUpdate(req.params.id, req.body, req.file, { new: true });
+        console.log(updateRegisterUser);
+        if (!updateRegisterUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ message: 'User updated successfully', user: updateRegisterUser });
+
+
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating user', error });
+    }
+};
+
+exports.deleteRegisterUser = async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting user', error });
+    }
+};
 
 //Login API
 

@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     userDOB: { type: String, required: true },
     userMobileNo: { type: String },
     userAddress: { type: String },
-    userProfilePhoto: {}
+    userProfilePhoto: { type: String, required: true }
 
 });
 
