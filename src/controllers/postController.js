@@ -1,6 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const Post = require("../models/postModel");
-const User = require("../models/userModel");
+const User = require("../models/authModels");
 const Comment = require("../models/postCommentsModel");
 
 module.exports.createPost = async (req, res) => {
