@@ -2,6 +2,7 @@
 const mongoose = require('mongoose');
 const friendRequest = require('../models/requestModel');
 //const User = require('../models/authModels');
+const User = require('../models/userModel');
 
 // Send
 exports.sendRequest = async (req, res) => {
@@ -98,9 +99,7 @@ exports.friendList = async (req, res) => {
       return res.status(200).json({ message: "No friends found" });
     }
 
-    const friendIds = acceptedRequests.map(req =>
-      req.sender == userId ? req.receiver : req.sender
-    );
+    const friendIds = acceptedRequests.map(req => req.sender == userId ? req.receiver : req.sender);
 
     // Remove duplicates
     const uniqueFriendIds = [...new Set(friendIds)];
