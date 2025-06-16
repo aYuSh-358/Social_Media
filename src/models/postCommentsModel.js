@@ -11,8 +11,10 @@ const postCommentsSchema = new mongoose.Schema({
     ref: "User",
     require: true,
   },
-  comments: {
+  comment: {
     type: String,
     require: true,
   },
 });
+
+module.exports = mongoose.model("Comment", postCommentsSchema);

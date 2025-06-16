@@ -1,23 +1,17 @@
 const express = require("express");
-const { connectDB } = require("./config/connectDB");
-const bodyParser = require("body-parser");
-const userRoutes = require("./src/routes/userRoutes");
-const authRoutes = require("./src/routes/authRoutes");
-
 require("dotenv").config();
 const session = require("express-session");
+const { connectDB } = require("./config/connectDB");
 const postRouter = require("./src/routes/postRoute");
-
+const bodyParser = require("body-parser");
+const authRoutes = require("./src/routes/authRoutes");
+const path = require("path");
 const app = express();
 
 connectDB();
 
-// Middleware
 app.use(bodyParser.json());
-
-// Routes
-app.use("/", userRoutes);
-app.use("/", authRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.json("I am alive...!");
@@ -30,9 +24,11 @@ app.use(
     saveUninitialized: false,
     cookie: { maxAge: parseInt(process.env.JWT_EXPIRE) },
   })
-); //6 hr
+);
 
+app.use("/auth", authRoutes);
 app.use("/post", postRouter);
+app.use("/api", require("./src/routes/requestRoutes"));
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on ${process.env.PORT}`);
@@ -40,4 +36,9 @@ app.listen(process.env.PORT, () => {
 
 
 
+<<<<<<< HEAD
 app.use('/api', require('./src/routes/requestRoute'));
+=======
+
+
+>>>>>>> 5ffadf5d26382a8515670e89bb3a2c218dee7037

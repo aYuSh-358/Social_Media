@@ -3,13 +3,21 @@ const mongoose = require("mongoose");
 const postSchema = new mongoose.Schema({
   post: {
     type: String,
-    require: true,
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    require: true,
   },
+  permission: {
+    type: String,
+    enum: ["0", "1", "2"],
+  },
+  likeBy: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
 });
 
 module.exports = mongoose.model("Post", postSchema);
