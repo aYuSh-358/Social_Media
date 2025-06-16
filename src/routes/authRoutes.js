@@ -17,6 +17,6 @@ router.delete('/deleteRegisterUser/:id', verifyToken, upload.single("userProfile
 
 
 // Login Route
-router.post('/loginUser', verifyToken, validator.validator('loginUser'), authController.loginUser);
+router.post('/loginUser', validator.validator('loginUser'), authController.loginUser);
 
 module.exports = router;
