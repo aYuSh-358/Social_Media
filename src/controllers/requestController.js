@@ -34,7 +34,7 @@ exports.sendRequest = async (req, res) => {
 
 
 
-
+//status
 exports.checkStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -81,7 +81,7 @@ exports.respondToRequest = async (req, res) => {
 
 
 
-
+//friend list
 exports.friendList = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -113,3 +113,5 @@ exports.friendList = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
