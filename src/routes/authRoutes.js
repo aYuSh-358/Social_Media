@@ -10,10 +10,10 @@ const { upload } = require("../middleware/multerConfig");
 
 // Register Route
 router.post('/registerUser', verifyToken, validator.validator('registerUser'), upload.single("userProfilePhoto"), authController.registerUser);
-router.get('/getAllRegisterUsers', verifyToken, upload.single("userProfilePhoto"), authController.getAllRegisterUsers);
-router.get('/getRegisterUserById/:id', verifyToken, upload.single("userProfilePhoto"), authController.getRegisterUserById);
+router.get('/getAllRegisterUsers', verifyToken, authController.getAllRegisterUsers);
+router.get('/getRegisterUserById/:id', verifyToken, authController.getRegisterUserById);
 router.put('/updateRegisterUser/:id', verifyToken, validator.validator('registerUser'), upload.single("userProfilePhoto"), authController.updateRegisterUser);
-router.delete('/deleteRegisterUser/:id', verifyToken, upload.single("userProfilePhoto"), authController.deleteRegisterUser);
+router.delete('/deleteRegisterUser/:id', verifyToken, authController.deleteRegisterUser);
 
 
 // Login Route
