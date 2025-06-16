@@ -4,24 +4,17 @@ var requestSchema = new mongoose.Schema({
         type: String,
 
     },
-    reciever: {
+    receiver: {
         type: String,
 
     },
     status: {
         type: String,
-
-    },
-    // companyId: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Company",
-    //   required: [true],
-    // }
-
+        enum: ["pending", "accepted", "rejected"],
+        default: "pending",
+        required: true
+    }
 
 });
 
 module.exports = mongoose.model('friendRequest', requestSchema);
-
-
-
