@@ -36,5 +36,9 @@ app.listen(process.env.PORT, () => {
 
 
 
+<<<<<<< HEAD
+app.use('/api', require('./src/routes/requestRoute'));
+=======
 
 
+>>>>>>> 5ffadf5d26382a8515670e89bb3a2c218dee7037
