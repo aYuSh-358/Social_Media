@@ -28,13 +28,8 @@ app.use(
 
 app.use("/auth", authRoutes);
 app.use("/post", postRouter);
-app.use("/api", require("./src/routes/requestRoutes"));
+app.use("/api", require("./src/routes/requestRoute"));
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on ${process.env.PORT}`);
 });
-
-
-
-
-
