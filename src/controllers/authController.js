@@ -96,12 +96,10 @@ exports.updateRegisterUser = async (req, res) => {
     try {
         const updateData = { ...req.body };
 
-        // Hash the password if it's being updated
         if (updateData.userPassword) {
             updateData.userPassword = await bcrypt.hash(updateData.userPassword, 10);
         }
 
-        // Add profile photo if uploaded
         if (req.file) {
             updateData.userProfilePhoto = req.file.filename;
         }
