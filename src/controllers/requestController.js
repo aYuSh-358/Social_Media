@@ -1,8 +1,7 @@
-
-const mongoose = require('mongoose');
-const friendRequest = require('../models/requestModel');
-//const User = require('../models/authModels');
-const User = require('../models/userModel');
+const mongoose = require("mongoose");
+const friendRequest = require("../models/requestModel");
+const User = require("../models/authModels");
+// const User = require('../models/userModel');
 
 // Send
 exports.sendRequest = async (req, res) => {
@@ -14,7 +13,7 @@ exports.sendRequest = async (req, res) => {
 
   const existing = await friendRequest.findOne({
     sender: senderId,
-    receiver: receiverId
+    receiver: receiverId,
   });
 
   if (existing) {
@@ -24,16 +23,12 @@ exports.sendRequest = async (req, res) => {
   const request = new friendRequest({
     sender: senderId,
     receiver: receiverId,
-    status: 'pending'
+    status: "pending",
   });
 
   await request.save();
   res.status(200).json({ message: "Friend request sent" });
 };
-
-
-
-
 
 //status
 exports.checkStatus = async (req, res) => {
@@ -49,27 +44,27 @@ exports.checkStatus = async (req, res) => {
     res.status(200).json({
       sender: request.sender,
       receiver: request.receiver,
-      status: request.status
+      status: request.status,
     });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 };
 
-
-
-
-
 // Accept or Reject
 exports.respondToRequest = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  if (!['accepted', 'rejected'].includes(status)) {
+  if (!["accepted", "rejected"].includes(status)) {
     return res.status(400).json({ message: "Invalid status" });
   }
 
-  const request = await friendRequest.findByIdAndUpdate(id, { status }, { new: true });
+  const request = await friendRequest.findByIdAndUpdate(
+    id,
+    { status },
+    { new: true }
+  );
 
   if (!request) {
     return res.status(404).json({ message: "Request not found" });
@@ -78,33 +73,30 @@ exports.respondToRequest = async (req, res) => {
   res.status(200).json({ message: `Request ${status}` });
 };
 
-
-
-
-
 //friend list
 exports.friendList = async (req, res) => {
   try {
     const userId = req.params.id;
 
     const acceptedRequests = await friendRequest.find({
-      status: 'accepted',
-      $or: [
-        { sender: userId },
-        { receiver: userId }
-      ]
+      status: "accepted",
+      $or: [{ sender: userId }, { receiver: userId }],
     });
 
     if (!acceptedRequests.length) {
       return res.status(200).json({ message: "No friends found" });
     }
 
-    const friendIds = acceptedRequests.map(req => req.sender == userId ? req.receiver : req.sender);
+    const friendIds = acceptedRequests.map((req) =>
+      req.sender == userId ? req.receiver : req.sender
+    );
 
     // Remove duplicates
     const uniqueFriendIds = [...new Set(friendIds)];
 
-    const friends = await User.find({ _id: { $in: uniqueFriendIds } }).select("userName userEmail");
+    const friends = await User.find({ _id: { $in: uniqueFriendIds } }).select(
+      "userName userEmail"
+    );
 
     res.status(200).json({ friends });
   } catch (error) {
@@ -112,5 +104,3 @@ exports.friendList = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
