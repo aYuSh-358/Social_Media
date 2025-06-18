@@ -5,6 +5,7 @@ const { connectDB } = require("./config/connectDB");
 const postRouter = require("./src/routes/postRoute");
 const bodyParser = require("body-parser");
 const authRoutes = require("./src/routes/authRoutes");
+const requestRoute = require("./src/routes/requestRoute");
 const path = require("path");
 const app = express();
 
@@ -28,7 +29,8 @@ app.use(
 
 app.use("/auth", authRoutes);
 app.use("/post", postRouter);
-app.use("/api", require("./src/routes/requestRoute"));
+app.use("/api", requestRoute);
+
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on ${process.env.PORT}`);
