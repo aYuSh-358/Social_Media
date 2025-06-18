@@ -7,11 +7,15 @@ const bodyParser = require("body-parser");
 const authRoutes = require("./src/routes/authRoutes");
 const path = require("path");
 const app = express();
+const cors = require('cors');
+app.use(cors());
+
 
 connectDB();
 
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.static(path.join(__dirname, 'src/public')));
 
 app.get("/", (req, res) => {
   res.json("I am alive...!");

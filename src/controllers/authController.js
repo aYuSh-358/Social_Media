@@ -142,6 +142,7 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
+
         const { userEmail, userPassword } = req.body;
 
         const existingUser = await User.findOne({ userEmail });
