@@ -92,6 +92,8 @@ io.on("connection", async (socket) => {
 
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.static(path.join(__dirname, "src/public")));
+
 app.get("/", (req, res) => {
   res.json("I am alive...!");
 });
