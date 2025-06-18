@@ -8,6 +8,7 @@ const bodyParser = require("body-parser");
 const authRoutes = require("./src/routes/authRoutes");
 const friendRequest = require("./src/models/requestModel");
 const Chat = require("./src/models/chatModels");
+const requestRoute = require("./src/routes/requestRoute");
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
@@ -110,7 +111,8 @@ app.use(
 app.use("/auth", authRoutes);
 app.use("/post", postRouter);
 app.use("/chat", chatRouter);
-app.use("/api", require("./src/routes/requestRoute"));
+app.use("/api", requestRoute);
+
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on ${process.env.PORT}`);
