@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Private Chat App</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        margin: 0;
+        padding: 0;
+      }
+
+      #app {
+        display: flex;
+        height: 100vh;
+      }
+
+      #sidebar {
+        width: 250px;
+        background: #f2f2f2;
+        border-right: 1px solid #ccc;
+        overflow-y: auto;
+        padding: 10px;
+      }
+
+      .user-item {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        cursor: pointer;
+      }
+
+      .user-item:hover {
+        background: #ddd;
+      }
+
+      #chat-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #messages {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        border-bottom: 1px solid #ccc;
+      }
+
+      #input-area {
+        display: flex;
+        padding: 10px;
+      }
+
+      #msgInput {
+        flex: 1;
+        padding: 8px;
+      }
+
+      #sendBtn {
+        padding: 8px 16px;
+        margin-left: 10px;
+      }
+
+      #login {
+        padding: 20px;
+      }
+
+      h3 {
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="login">
+      <h2>Private Chat App</h2>
+      <input id="username" placeholder="Username" />
+      <input id="password" placeholder="Password" type="password" />
+      <button onclick="register()">Register</button>
+      <button onclick="login()">Login</button>
+    </div>
+
+    <div id="app" style="display: none">
+      <div id="sidebar">
+        <h3>Users</h3>
+        <div id="userList"></div>
+      </div>
+
+      <div id="chat-panel">
+        <h3 id="chatWith">Chat with: None</h3>
+        <div id="messages"></div>
+        <div id="input-area">
+          <input id="msgInput" placeholder="Type a message" />
+          <button id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let socket;
+      let myId = "";
+      let username = "";
+      let selectedUser = null;
+      let allUsers = [];
+      let onlineFriends = ";";
+
+      async function register() {
+        const user = document.getElementById("username").value;
+        const pass = document.getElementById("password").value;
+        await fetch("http://localhost:5000/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: user, password: pass }),
+        });
+        alert("Registered!");
+      }
+
+      async function login() {
+        const user = document.getElementById("username").value;
+        const pass = document.getElementById("password").value;
+        console.log(user, pass);
+        const res = await fetch("http://localhost:5000/auth/loginUser", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userEmail: user, userPassword: pass }),
+        });
+        // console.log(res);
+        const data = await res.json();
+        console.log(data);
+        // console.log(data.token);
+
+        if (data.token) {
+          userEmail = data.user.userEmail;
+          localStorage.setItem("userId", data.user._id);
+          // await fetchSelfId();
+          initChat();
+        } else {
+          alert("Login failed");
+        }
+      }
+      myId = localStorage.getItem("userId");
+
+      function initChat() {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("app").style.display = "flex";
+
+        socket = io("http://localhost:5000");
+        socket.emit("registeUser", myId);
+
+        socket.on("receivePrivateMessage", (data) => {
+          if (
+            (data.senderId === selectedUser._id && data.receiverId === myId) ||
+            (data.senderId === myId && data.receiverId === selectedUser._id)
+          ) {
+            addMessage(
+              `${data.senderId === myId ? "You" : selectedUser.username}: ${
+                data.message
+              }`
+            );
+          }
+        });
+        socket.on("receivePrivateMessage", (data) => {
+          const isCurrentChat =
+            selectedUser &&
+            ((data.senderId === selectedUser._id && data.receiverId === myId) ||
+              (data.senderId === myId && data.receiverId === selectedUser._id));
+
+          // If the sender is NOT in the loaded user list, reload the user list
+          const knownUser = allUsers.find(
+            (u) => u._id === data.senderId || u._id === data.receiverId
+          );
+          if (!knownUser) loadAllUsers();
+
+          if (isCurrentChat) {
+            const sender =
+              data.senderId === myId ? "You" : selectedUser.username;
+            addMessage(`${sender}: ${data.message}`);
+          }
+        });
+        socket.on("onlineFriends", (onlineFriendIds) => {
+          loadAllUsers();
+          onlineFriends = onlineFriendIds;
+          console.log("user" + onlineFriends);
+        });
+        // socket.on("updateUserList", () => {
+        //   loadAllUsers();
+        // });
+        loadAllUsers();
+      }
+
+      async function loadAllUsers() {
+        const res = await fetch(
+          "http://localhost:5000/auth/getAllRegisterUsers"
+        );
+        const users = await res.json();
+        count = onlineFriends.length;
+        if (count != 0) {
+          for (let i = 0; i < count; i++) {
+            allUsers.push(users.filter((u) => u._id == onlineFriends[i]));
+          }
+        }
+        // let allUsers = users.filter((u) => u._id !== onlineFriends);
+        // allUsers = user;
+        renderUserList();
+        console.log(allUsers);
+      }
+
+      function renderUserList() {
+        const userListDiv = document.getElementById("userList");
+        userListDiv.innerHTML = "";
+
+        // Assuming allUsers is structured as [Array(0), Array(1)]
+        // where Array(1) contains your user object.
+
+        if (allUsers && allUsers.length > 0) {
+          // Use flatMap to flatten the array and filter out empty arrays
+          const allUserObjects = allUsers.flatMap((innerArray) => {
+            // Only return the inner arrays that contain actual user objects
+            if (
+              Array.isArray(innerArray) &&
+              innerArray.length > 0 &&
+              typeof innerArray[0] === "object" &&
+              innerArray[0].userName
+            ) {
+              return innerArray;
+            }
+            return []; // Return an empty array for those that don't contain user objects
+          });
+
+          // Now, iterate over the flattened array of user objects
+          allUserObjects.forEach((user) => {
+            const div = document.createElement("div");
+            div.className = "user-item";
+            div.innerText = user.userName; // This will now correctly access all user names
+            div.onclick = () => selectUser(user);
+            userListDiv.appendChild(div);
+          });
+        } else {
+          console.log("No user data found.");
+          // You might want to display a message to the user or handle this case
+        }
+      }
+
+      async function selectUser(user) {
+        selectedUser = user;
+        console.log(user);
+        document.getElementById(
+          "chatWith"
+        ).innerText = `Chat with: ${user.userName}`;
+        document.getElementById("messages").innerHTML = "";
+
+        const res = await fetch(
+          `http://localhost:5000/chat/userchat/${myId}/${user._id}`
+        );
+        const response = await res.json();
+        const msgs = response.data;
+        msgs.map((msg) => {
+          const sender = msg.senderId === myId ? "You" : user.username;
+          addMessage(`${sender}: ${msg.message}`);
+        });
+      }
+
+      function sendMessage() {
+        const msg = document.getElementById("msgInput").value;
+        if (!selectedUser) return alert("Select a user to chat with.");
+        console.log(msg, myId, selectedUser._id);
+        socket.emit("privateMessage", {
+          senderId: myId,
+          receiverId: selectedUser._id,
+          message: msg,
+        });
+
+        document.getElementById("msgInput").value = "";
+      }
+
+      function addMessage(msg) {
+        const div = document.getElementById("messages");
+        div.innerHTML += `<p>${msg}</p>`;
+        div.scrollTop = div.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
