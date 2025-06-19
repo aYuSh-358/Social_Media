@@ -1,217 +1,358 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chat Page</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+      * {
+        box-sizing: border-box;
+      }
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
-        header {
-            height: 60px;
-            background-color: #04AA6D;
-            color: white;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            gap: 15px;
-        }
+      header {
+        height: 60px;
+        background-color: #04aa6d;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        gap: 15px;
+      }
 
-        header img.avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
+      header img.avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+      }
 
-        header span.username {
-            font-weight: bold;
-            font-size: 18px;
-        }
+      header span.username {
+        font-weight: bold;
+        font-size: 18px;
+      }
 
+      main {
+        flex: 1;
+        display: flex;
+        background: #f0f0f0;
+      }
 
-        main {
-            flex: 1;
-            display: flex;
-            background: #f0f0f0;
-        }
+      .chat-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid #ddd;
+      }
 
+      .messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: white;
+      }
 
-        .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #ddd;
-        }
+      .chat-input {
+        display: flex;
+        padding: 10px 20px;
+        background: #eee;
+        border-top: 1px solid #ddd;
+      }
 
+      .chat-input input[type="text"] {
+        flex: 1;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
 
-        .messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: white;
-        }
+      .chat-input button {
+        background-color: #04aa6d;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        margin-left: 10px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
 
+      .chat-input button:hover {
+        background-color: #039f5b;
+      }
 
-        .chat-input {
-            display: flex;
-            padding: 10px 20px;
-            background: #eee;
-            border-top: 1px solid #ddd;
-        }
+      .friend-list {
+        width: 280px;
+        background: white;
+        border-left: 1px solid #ddd;
+        display: flex;
+        flex-direction: column;
+      }
 
-        .chat-input input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+      .friend-list h1 {
+        margin: 15px;
+        font-size: 25px;
+        border-bottom: 1px solid #2dc735;
+        padding-bottom: 5px;
+        color: #04aa6d;
+      }
 
-        .chat-input button {
-            background-color: #04AA6D;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            margin-left: 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+      .friend-list h3 {
+        margin: 15px;
+        font-size: 20px;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+      }
 
-        .chat-input button:hover {
-            background-color: #039f5b;
-        }
+      .friends {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 15px 15px 15px;
+      }
 
+      .friend {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
 
-        .friend-list {
-            width: 280px;
-            background: white;
-            border-left: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
-        }
+      .friend:hover {
+        background-color: #f5f5f5;
+      }
 
-        .friend-list h1 {
-            margin: 15px;
-            font-size: 25px;
-            border-bottom: 1px solid #2dc735;
-            padding-bottom: 5px;
-            color: #04AA6D
-        }
+      .friend img {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+      }
 
-        .friend-list h3 {
-            margin: 15px;
-            font-size: 20px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
+      .friend .name {
+        flex: 1;
+      }
 
-        .friends {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 15px 15px 15px;
-        }
+      .status {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
 
+      .online {
+        background-color: #4caf50;
+      }
 
-        .friend {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 5px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .friend:hover {
-            background-color: #f5f5f5;
-        }
-
-        .friend img {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-        }
-
-        .friend .name {
-            flex: 1;
-        }
-
-        .status {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .online {
-            background-color: #4CAF50;
-        }
-
-        .offline {
-            background-color: #bbb;
-        }
+      .offline {
+        background-color: #bbb;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <header>
-        <img class="Dp" src="/Social_Media/uploads/DP" alt="userProfilePhoto" />
-        <span class="username">userName</span>
+      <img class="Dp" src="/Social_Media/uploads/DP" alt="userProfilePhoto" />
+      <span class="username">userName</span>
     </header>
 
     <main>
-        <div class="chat-container">
-            <div class="messages" id="messages">
+      <div class="chat-container">
+        <div class="messages" id="messages"></div>
 
-            </div>
+        <form class="chat-input" id="chatForm">
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Type your message..."
+            autocomplete="off"
+            required
+          />
+          <button type="submit">Send</button>
+        </form>
+      </div>
 
-            <form class="chat-input" id="chatForm">
-                <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off" required />
-                <button type="submit">Send</button>
-            </form>
-        </div>
-
-        <aside class="friend-list">
-            <h1> Friend list</h1>
-            <!-- <h3>Online Friends</h3>
+      <aside class="friend-list">
+        <h1>Friend list</h1>
+        <!-- <h3>Online Friends</h3>
             <h3>Offline Friends</h3> -->
-
-        </aside>
+      </aside>
     </main>
-
     <script>
+      let socket;
+      let myId = "";
+      let username = "";
+      let selectedUser = null;
+      let allUsers = [];
+      let onlineFriends = "";
+      const chatForm = document.getElementById("chatForm");
+      const messages = document.getElementById("messages");
+      const messageInput = document.getElementById("messageInput");
 
-        const chatForm = document.getElementById('chatForm');
-        const messages = document.getElementById('messages');
-        const messageInput = document.getElementById('messageInput');
+      chatForm.addEventListener("submit", (e) => {
+        e.preventDefault();
 
-        chatForm.addEventListener('submit', e => {
-            e.preventDefault();
+        const message = messageInput.value.trim();
+        if (message === "") return;
 
-            const message = messageInput.value.trim();
-            if (message === '') return;
+        const newMsg = document.createElement("p");
+        newMsg.innerHTML = `<strong>userName:</strong> ${message}`;
+        messages.appendChild(newMsg);
 
+        messageInput.value = "";
+        messages.scrollTop = messages.scrollHeight;
+      });
 
-            const newMsg = document.createElement('p');
-            newMsg.innerHTML = `<strong>userName:</strong> ${message}`;
-            messages.appendChild(newMsg);
+      function initChat() {
+        // document.getElementById("login").style.display = "none";
+        // document.getElementById("app").style.display = "flex";
 
-            messageInput.value = '';
-            messages.scrollTop = messages.scrollHeight;
+        socket = io("http://localhost:5000");
+        socket.emit("registeUser", myId);
+
+        socket.on("receivePrivateMessage", (data) => {
+          if (
+            (data.senderId === selectedUser._id && data.receiverId === myId) ||
+            (data.senderId === myId && data.receiverId === selectedUser._id)
+          ) {
+            addMessage(
+              `${data.senderId === myId ? "You" : selectedUser.username}: ${
+                data.message
+              }`
+            );
+          }
         });
+        socket.on("receivePrivateMessage", (data) => {
+          const isCurrentChat =
+            selectedUser &&
+            ((data.senderId === selectedUser._id && data.receiverId === myId) ||
+              (data.senderId === myId && data.receiverId === selectedUser._id));
+
+          // If the sender is NOT in the loaded user list, reload the user list
+          const knownUser = allUsers.find(
+            (u) => u._id === data.senderId || u._id === data.receiverId
+          );
+          if (!knownUser) loadAllUsers();
+
+          if (isCurrentChat) {
+            const sender =
+              data.senderId === myId ? "You" : selectedUser.username;
+            addMessage(`${sender}: ${data.message}`);
+          }
+        });
+        socket.on("onlineFriends", (onlineFriendIds) => {
+          loadAllUsers();
+          onlineFriends = onlineFriendIds;
+          console.log("user" + onlineFriends);
+        });
+        // socket.on("updateUserList", () => {
+        //   loadAllUsers();
+        // });
+        loadAllUsers();
+      }
+
+      async function loadAllUsers() {
+        const res = await fetch(
+          "http://localhost:5000/auth/getAllRegisterUsers"
+        );
+        const users = await res.json();
+        count = onlineFriends.length;
+        if (count != 0) {
+          for (let i = 0; i < count; i++) {
+            allUsers.push(users.filter((u) => u._id == onlineFriends[i]));
+          }
+        }
+        // let allUsers = users.filter((u) => u._id !== onlineFriends);
+        // allUsers = user;
+        renderUserList();
+        console.log(allUsers);
+      }
+
+      function renderUserList() {
+        const userListDiv = document.getElementById("userList");
+        userListDiv.innerHTML = "";
+
+        // Assuming allUsers is structured as [Array(0), Array(1)]
+        // where Array(1) contains your user object.
+
+        if (allUsers && allUsers.length > 0) {
+          // Use flatMap to flatten the array and filter out empty arrays
+          const allUserObjects = allUsers.flatMap((innerArray) => {
+            // Only return the inner arrays that contain actual user objects
+            if (
+              Array.isArray(innerArray) &&
+              innerArray.length > 0 &&
+              typeof innerArray[0] === "object" &&
+              innerArray[0].userName
+            ) {
+              return innerArray;
+            }
+            return []; // Return an empty array for those that don't contain user objects
+          });
+
+          // Now, iterate over the flattened array of user objects
+          allUserObjects.forEach((user) => {
+            const div = document.createElement("div");
+            div.className = "user-item";
+            div.innerText = user.userName; // This will now correctly access all user names
+            div.onclick = () => selectUser(user);
+            userListDiv.appendChild(div);
+          });
+        } else {
+          console.log("No user data found.");
+          // You might want to display a message to the user or handle this case
+        }
+      }
+
+      async function selectUser(user) {
+        selectedUser = user;
+        console.log(user);
+        document.getElementById(
+          "chatWith"
+        ).innerText = `Chat with: ${user.userName}`;
+        document.getElementById("messages").innerHTML = "";
+
+        const res = await fetch(
+          `http://localhost:5000/chat/userchat/${myId}/${user._id}`
+        );
+        const response = await res.json();
+        const msgs = response.data;
+        msgs.map((msg) => {
+          const sender = msg.senderId === myId ? "You" : user.username;
+          addMessage(`${sender}: ${msg.message}`);
+        });
+      }
+
+      function sendMessage() {
+        const msg = document.getElementById("msgInput").value;
+        if (!selectedUser) return alert("Select a user to chat with.");
+        console.log(msg, myId, selectedUser._id);
+        socket.emit("privateMessage", {
+          senderId: myId,
+          receiverId: selectedUser._id,
+          message: msg,
+        });
+
+        document.getElementById("msgInput").value = "";
+      }
+
+      function addMessage(msg) {
+        const div = document.getElementById("messages");
+        div.innerHTML += `<p>${msg}</p>`;
+        div.scrollTop = div.scrollHeight;
+      }
+
+      myId = localStorage.getItem("userId");
+      if (myId) {
+        initChat();
+      }
     </script>
-
-</body>
-
+  </body>
 </html>

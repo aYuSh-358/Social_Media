@@ -115,11 +115,11 @@
 
                 if (response.ok) {
                     alert("Login successful!");
-
-
+                    console.log(data)
                     localStorage.setItem("token", data.token);
+                    localStorage.setItem("userId", data.user._id);
 
-                    window.location.href = "/Social_Media/src/public/chatPage.html";
+                    window.location.href = "/src/public/chatPage.html";
                 } else {
                     alert(data.message || "Login failed. Invalid credentials.");
                 }
