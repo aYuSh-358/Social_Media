@@ -27,10 +27,10 @@ const io = new Server(server, {
 const activeConnection = new Map();
 
 io.on("connection", async (socket) => {
-  console.log("a user connected", socket.id);
+  // console.log("a user connected", socket.id);
   let userIdForThisSocket = null;
   socket.on("registeUser", async (myId) => {
-    console.log("User is ", myId);
+    // console.log("User is ", myId);
     userIdForThisSocket = myId;
     let userSockets = activeConnection.get(myId);
     if (!userSockets) {
@@ -48,8 +48,7 @@ io.on("connection", async (socket) => {
         },
       },
     ]);
-    console.log(friend);
-
+    // console.log(friend);
     const onlineFriends = friend.filter((f) => {
       const friendId = f.sender === myId ? f.receiver : f.sender;
       return (
@@ -58,19 +57,23 @@ io.on("connection", async (socket) => {
       );
     });
 
-    console.log("Online Friends (from your friend list):", onlineFriends);
+    // console.log("Online Friends (from your friend list):", onlineFriends);
 
     const onlineFriendIds = onlineFriends.map((f) => {
       return f.sender === myId ? f.receiver : f.sender;
     });
-    console.log("Online Friend IDs:", onlineFriendIds);
+    // console.log("Online Friend IDs:", onlineFriendIds);
     socket.emit("onlineFriends", onlineFriendIds);
 
     socket.on("privateMessage", async ({ senderId, receiverId, message }) => {
+      // console.log('ref', senderId, receiverId);
+
       const chat = new Chat({ senderId, receiverId, message });
       await chat.save();
 
       const receiverSocketId = activeConnection.get(receiverId);
+
+      console.log("receiverSocketId", receiverSocketId);
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("receivePrivateMessage", {
           senderId,
@@ -78,11 +81,11 @@ io.on("connection", async (socket) => {
           message,
         });
       }
-      socket.emit("receivePrivateMessage", {
-        senderId,
-        receiverId,
-        message,
-      });
+      // socket.emit("receivePrivateMessage", {
+      //   senderId,
+      //   receiverId,
+      //   message,
+      // });
     });
   });
 
