@@ -3,6 +3,7 @@ const User = require("../models/authModels");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const { sendEmail } = require("./sendEmailController");
 require("dotenv").config();
 
 //Register API
@@ -44,6 +45,7 @@ exports.registerUser = async (req, res) => {
     console.log(user);
 
     await user.save();
+    sendEmail(user);
     res.status(201).json({ message: "User registered successfully", user });
   } catch (error) {
     console.log(error);
