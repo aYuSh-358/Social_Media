@@ -10,7 +10,6 @@ const { upload } = require("../middleware/multerConfig");
 // Register Route
 router.post(
   "/registerUser",
-  verifyToken,
   validator.validator("registerUser"),
   upload.single("userProfilePhoto"),
   authController.registerUser
