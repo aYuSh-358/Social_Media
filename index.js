@@ -71,16 +71,20 @@ io.on("connection", async (socket) => {
       const chat = new Chat({ senderId, receiverId, message });
       await chat.save();
 
-      const receiverSocketId = activeConnection.get(receiverId);
-
-      console.log("receiverSocketId", receiverSocketId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("receivePrivateMessage", {
-          senderId,
-          receiverId,
-          message,
+      const receiverSocketIds = activeConnection.get(receiverId);
+      if (receiverSocketIds) {
+        receiverSocketIds.forEach((socketId) => {
+          io.to(socketId).emit("receivePrivateMessage", {
+            senderId,
+            receiverId,
+            message,
+          });
         });
       }
+      //       const receiverSocketId = activeConnection.get(receiverId);
+      // if (receiverSocketId) {
+      //   io.to(receiverSocketId).emit("receivePrivateMessage", { ... });
+      // }
       // socket.emit("receivePrivateMessage", {
       //   senderId,
       //   receiverId,
@@ -91,6 +95,16 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
+    // Remove socket from user's set
+    for (const [userId, sockets] of activeConnection.entries()) {
+      if (sockets.has(socket.id)) {
+        sockets.delete(socket.id);
+        if (sockets.size === 0) {
+          activeConnection.delete(userId);
+        }
+        break;
+      }
+    }
   });
 });
 
@@ -115,7 +129,6 @@ app.use("/auth", authRoutes);
 app.use("/post", postRouter);
 app.use("/chat", chatRouter);
 app.use("/api", requestRoute);
-
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on ${process.env.PORT}`);
