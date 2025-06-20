@@ -85,11 +85,11 @@ io.on("connection", async (socket) => {
       // if (receiverSocketId) {
       //   io.to(receiverSocketId).emit("receivePrivateMessage", { ... });
       // }
-      socket.emit("receivePrivateMessage", {
-        senderId,
-        receiverId,
-        message,
-      });
+      // socket.emit("receivePrivateMessage", {
+      //   senderId,
+      //   receiverId,
+      //   message,
+      // });
     });
   });
 
