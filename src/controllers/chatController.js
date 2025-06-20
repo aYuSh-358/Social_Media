@@ -18,13 +18,12 @@ module.exports.getMessages = async (req, res) => {
     const message = await Chat.aggregate([
       {
         $match: {
-          senderId: sender_id,
-          receiverId: receiver_id,
+          $or: [{ senderId: sender_id }, { receiverId: sender_id }],
         },
       },
     ]);
 
-    console.log(message);
+    console.log("messagae", message);
     if (message.length == 0) {
       res.status(500).json({ Status: "500", message: " Messages not found" });
     }
