@@ -2,24 +2,38 @@ const { default: mongoose } = require("mongoose");
 const Post = require("../models/postModel");
 const User = require("../models/authModels");
 const Comment = require("../models/postCommentsModel");
+const fs = require("fs");
 
 module.exports.createPost = async (req, res) => {
   try {
     const userId = req.params.id;
     const post = req.file;
-    const permission = req.body.permission;
-    console.log(userId, post, permission);
-    if (!userId || !post || !permission) {
+    const { permission, caption, Event } = req.body;
+
+    // console.log(userId, post, permission);
+    if (!userId || !permission) {
       res.status(500).json({
         Status: "400",
-        message: "userId, Post, Permission is missing",
+        message: "userId, Permission is missing",
       });
     }
-    const newPost = new Post({
-      post: post.filename,
-      userId,
-      permission: permission,
-    });
+    let newPost = {};
+    if (post) {
+      newPost = new Post({
+        post: post.filename,
+        userId,
+        permission: permission,
+        caption: caption,
+      });
+    } else {
+      newPost = new Post({
+        userId,
+        permission: permission,
+        caption: caption,
+        Event: Event,
+      });
+    }
+
     await newPost.save();
     res.status(200).json({ Status: "200", message: "Post add successfully" });
   } catch (error) {
@@ -184,14 +198,24 @@ module.exports.updatePost = async (req, res) => {
     const permission = req.body.permission;
     // console.log(postName, permission, postId);
     const post = await Post.findById(postId);
-    console.log(post);
+    // console.log(post);
     if (!post) {
       res
         .status(500)
         .message({ Status: "500", message: "Update Post Data is missing" });
     }
+    const rmfile = post.post;
+    if (rmfile) {
+      fs.unlink(`./uploads/posts/${rmfile}`, (err) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        console.log("File deleted successfully");
+      });
+    }
 
-    post.post = postName || post.post;
+    post.post = postName;
     post.permission = permission || post.permission;
     await post.save();
     res
@@ -208,7 +232,7 @@ module.exports.likePosts = async (req, res) => {
   try {
     const userId = req.params.id;
     const postId = req.body.postId;
-    console.log(userId, postId);
+    // console.log(userId, postId);
 
     const user = await User.findById(userId);
     if (!user) {
@@ -220,11 +244,6 @@ module.exports.likePosts = async (req, res) => {
     }
 
     const alreadylike = post.likeBy.includes(userId);
-    // if (alreadylike) {
-    //   res
-    //     .status(400)
-    //     .json({ Status: "400", message: "User already like the post" });
-    // }
     if (alreadylike) {
       post.likeBy.pull(userId);
       await post.save();
@@ -247,7 +266,7 @@ module.exports.likePosts = async (req, res) => {
 
 module.exports.addComment = async (req, res) => {
   try {
-    console.log(req.params.id);
+    // console.log(req.params.id);
     const userId = req.params.id;
     const { postId, comment } = req.body;
     if (!userId || !postId || !comment) {

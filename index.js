@@ -9,6 +9,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const friendRequest = require("./src/models/requestModel");
 const Chat = require("./src/models/chatModels");
 const requestRoute = require("./src/routes/requestRoute");
+const storyRoute = require("./src/routes/storyRoutes");
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
@@ -39,7 +40,7 @@ io.on("connection", async (socket) => {
     }
     userSockets.add(socket.id);
 
-    console.log("Active Connections:", activeConnection);
+    // console.log("Active Connections:", activeConnection);
     const friend = await friendRequest.aggregate([
       {
         $match: {
@@ -94,8 +95,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("user disconnected", socket.id);
-    // Remove socket from user's set
+    // console.log("user disconnected", socket.id);
     for (const [userId, sockets] of activeConnection.entries()) {
       if (sockets.has(socket.id)) {
         sockets.delete(socket.id);
@@ -127,6 +127,7 @@ app.use(
 
 app.use("/auth", authRoutes);
 app.use("/post", postRouter);
+app.use("/story", storyRoute);
 app.use("/chat", chatRouter);
 app.use("/api", requestRoute);
 

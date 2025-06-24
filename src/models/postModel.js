@@ -4,6 +4,9 @@ const postSchema = new mongoose.Schema({
   post: {
     type: String,
   },
+  Event: {
+    type: String,
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -11,6 +14,9 @@ const postSchema = new mongoose.Schema({
   permission: {
     type: String,
     enum: ["0", "1", "2"],
+  },
+  caption: {
+    type: String,
   },
   likeBy: [
     {

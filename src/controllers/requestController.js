@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const friendRequest = require("../models/requestModel");
 const User = require("../models/authModels");
-// const User = require('../models/userModel');
 
 // Send
 exports.sendRequest = async (req, res) => {

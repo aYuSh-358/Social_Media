@@ -5,7 +5,7 @@ const { mongoose } = require("mongoose");
 module.exports.getMessages = async (req, res) => {
   try {
     const { sender_id, receiver_id } = req.params;
-    console.log(sender_id, receiver_id);
+    // console.log(sender_id, receiver_id);
     const sender = await User.findById(sender_id);
     if (!sender) {
       res.status(400).json({ Status: "400", message: "Sender not found" });
@@ -23,7 +23,7 @@ module.exports.getMessages = async (req, res) => {
       },
     ]);
 
-    console.log("messagae", message);
+    // console.log("messagae", message);
     if (message.length == 0) {
       res.status(500).json({ Status: "500", message: " Messages not found" });
     }

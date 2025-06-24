@@ -15,7 +15,6 @@ router.post(
   authController.registerUser
 );
 router.get("/getAllRegisterUsers", authController.getAllRegisterUsers);
-// router.get('/getAllRegisterUsers', verifyToken, authController.getAllRegisterUsers);
 router.get(
   "/getRegisterUserById/:id",
   verifyToken,
