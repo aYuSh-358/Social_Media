@@ -42,7 +42,7 @@ exports.registerUser = async (req, res) => {
       userProfilePhoto: userProfilePhoto.filename,
     });
 
-    console.log(user);
+    // console.log(user);
 
     await user.save();
     sendEmail(user);
@@ -56,7 +56,7 @@ exports.registerUser = async (req, res) => {
 exports.getAllRegisterUsers = async (req, res) => {
   try {
     const users = await User.find();
-    console.log(users);
+    // console.log(users);
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users", error });
@@ -124,9 +124,9 @@ exports.updateRegisterUser = async (req, res) => {
       .status(200)
       .json({ message: "User updated successfully", user: updatedUser });
 
-    console.log(updatedUser);
+    // console.log(updatedUser);
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     res
       .status(500)
       .json({ message: "Error updating user", error: error.message });
