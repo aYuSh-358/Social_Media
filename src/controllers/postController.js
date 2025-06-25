@@ -61,15 +61,6 @@ module.exports.getPosts = async (req, res) => {
             userId: new mongoose.Types.ObjectId(userId),
           },
         },
-        // {
-        //   $lookup: {
-        //     from: "comments",
-        //     localField: "_id",
-        //     foreignField: "postId",
-        //     as: "comment",
-        //   },
-        // },
-        // { $unwind: "$comment" },
       ]);
 
       const data = [];
@@ -77,8 +68,8 @@ module.exports.getPosts = async (req, res) => {
         data.push({
           id: post._id,
           post: `http://localhost:5000/uploads/posts/${post.post}`,
-          userId: post.userId,
-          LikeBy: post.likeBy,
+          comments: post.comments || "",
+          likes: post.LikeBy || "",
         });
       });
       res
@@ -94,15 +85,25 @@ module.exports.getPosts = async (req, res) => {
           },
         },
         {
-          $project: { post: 1, userId: 1 },
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user",
+          },
         },
+        { $unwind: "$user" },
       ]);
-
+      // console.log(posts);
       const data = [];
       posts.map((post) => {
         data.push({
           post: `http://localhost:5000/uploads/posts/${post.post}`,
           userId: post.userId,
+          comments: post.comments,
+          likes: post.LikeBy,
+          user: post.user.userName,
+          userProfile: post.user.userProfilePhoto || "",
         });
       });
       res.status(200).json({ Status: "200", data });
@@ -283,11 +284,12 @@ module.exports.addComment = async (req, res) => {
       res.status(400).json({ Status: "400", message: "Post not found" });
     }
 
-    const newComment = new Comment({ userId, postId, comment });
+    const newComment = { userId: userId, comment: comment };
     // if (!newComment) {
     //   res.status(500).json({ Status: "500", message: "No comments Found" });
     // }
-    await newComment.save();
+    post.comments.push(newComment);
+    await post.save();
     res
       .status(200)
       .json({ Status: "200", message: "Comment added successfully" });

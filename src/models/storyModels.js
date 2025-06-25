@@ -16,6 +16,12 @@ var storySchema = new mongoose.Schema(
       default: "2",
       required: true,
     },
+    viewBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     status: {
       type: String,
       enum: ["0", "1"],

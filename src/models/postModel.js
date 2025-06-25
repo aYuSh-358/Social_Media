@@ -10,6 +10,7 @@ const postSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    require: true,
   },
   permission: {
     type: String,
@@ -22,6 +23,19 @@ const postSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+  ],
+  comments: [
+    {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      comment: {
+        type: String,
+        required: true,
+      },
     },
   ],
 });

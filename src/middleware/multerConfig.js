@@ -49,7 +49,7 @@ const storage = multer.diskStorage({
     //const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const uniqueSuffix = file.originalname;
     const ext = path.extname(file.originalname);
-    const newFileName = `post-${uniqueSuffix}${ext}`;
+    const newFileName = `post-${uniqueSuffix}`;
     cb(null, newFileName);
   },
 });

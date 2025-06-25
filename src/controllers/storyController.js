@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const { default: mongoose, model } = require("mongoose");
 const User = require("../models/authModels");
 const Story = require("../models/storyModels");
 const friendRequest = require("../models/requestModel");
@@ -70,7 +70,8 @@ module.exports.getStoriesForUser = async (req, res) => {
         if (existUser && existUser.length > 0) {
           return {
             user: existUser[0], // Access the first element of the aggregation result
-            post: `http://localhost:5000/uploads/story/${friend.userId}/${friend.story}`,
+            storyId: friend._id,
+            story: `http://localhost:5000/uploads/story/${friend.userId}/${friend.story}`,
           };
         }
       }
@@ -123,6 +124,34 @@ module.exports.archiveStory = async (req, res) => {
       .json({ Status: "200", mesage: "All user Stories", data: story });
   } catch (error) {
     console.log(error);
+  }
+};
+
+module.exports.viewStory = async (req, res) => {
+  try {
+    const { userId, storyId } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(400).json({ Status: "400", message: "User not found" });
+    }
+    const story = await Story.findById(storyId);
+    if (!story) {
+      res.status(400).json({ Status: "400", message: "Story not found" });
+    }
+    if ((story.userId = userId)) {
+      res.status(204).json({ message: "You viewed your own story" });
+    }
+    let alreadyView = story.viewBy.includes(userId);
+    if (alreadyView) {
+      res.status(204);
+    } else {
+      story.viewBy.push(userId);
+      await story.save();
+    }
+    res.status(201).json({ Status: "201", message: "View Story" });
+  } catch (error) {
+    res.status(500).json({ Status: "500", message: error });
   }
 };
 
