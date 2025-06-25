@@ -1,11 +1,12 @@
 const mongoose = require("mongoose");
 const friendRequest = require("../models/requestModel");
 const User = require("../models/authModels");
-// const User = require('../models/userModel');
+const { sendNotification } = require('../utils/sendNotification');
 
 // Send
 exports.sendRequest = async (req, res) => {
   const { senderId, receiverId } = req.body;
+  const { io, activeConnection } = req;
 
   if (senderId == receiverId) {
     return res.status(200).json({ message: "Cannot send request to yourself" });
@@ -28,6 +29,18 @@ exports.sendRequest = async (req, res) => {
 
   await request.save();
   res.status(200).json({ message: "Friend request sent" });
+
+  // Create notification
+  await sendNotification({
+    userId: receiverId,
+    senderId: senderId,
+    type: "follow-request",
+    message: `${req.userName} sent you a friend request`,
+    io,
+    activeConnection
+
+  });
+
 };
 
 //status
@@ -55,6 +68,7 @@ exports.checkStatus = async (req, res) => {
 exports.respondToRequest = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
+  const { io, activeConnection } = req;
 
   if (!["accepted", "rejected"].includes(status)) {
     return res.status(400).json({ message: "Invalid status" });
@@ -71,6 +85,18 @@ exports.respondToRequest = async (req, res) => {
   }
 
   res.status(200).json({ message: `Request ${status}` });
+
+
+  // Create notification for accepted request
+  await sendNotification({
+    userId: request.sender,
+    senderId: request.receiver,
+    type: "follow-accepted",
+    message: `Your friend request has been ${status} by ${request.receiver}`,
+    io,
+    activeConnection
+  });
+
 };
 
 //friend list

@@ -9,10 +9,13 @@ const authRoutes = require("./src/routes/authRoutes");
 const friendRequest = require("./src/models/requestModel");
 const Chat = require("./src/models/chatModels");
 const requestRoute = require("./src/routes/requestRoute");
+const notificationRoute = require("./src/routes/notificationRoute");
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const { sendNotification } = require("./src/utils/sendNotification");
+const Notification = require("./src/models/notificationModels");
 
 const app = express();
 app.use(cors());
@@ -85,11 +88,12 @@ io.on("connection", async (socket) => {
       // if (receiverSocketId) {
       //   io.to(receiverSocketId).emit("receivePrivateMessage", { ... });
       // }
-      socket.emit("receivePrivateMessage", {
-        senderId,
-        receiverId,
-        message,
-      });
+
+      // socket.emit("receivePrivateMessage", {
+      //   senderId,
+      //   receiverId,
+      //   message,
+      // });
     });
   });
 
@@ -106,7 +110,31 @@ io.on("connection", async (socket) => {
       }
     }
   });
+
+
+  // Listen for notifications sent from clients
+  socket.on("sendNotification", async ({ userId, notification }) => {
+    const userSockets = activeConnection.get(userId);
+    if (userSockets) {
+      userSockets.forEach((socketId) => {
+        io.to(socketId).emit("receiveNotification", notification);
+      });
+    } else {
+      // User offline - save notification in DB
+      console.log(`User ${userId} is offline. Saving notification in database.`);
+      await sendNotification({
+        userId,
+        senderId: notification.senderId,
+        type: notification.type,
+        message: notification.message,
+        io,
+        activeConnection,
+      });
+    }
+    console.log(`Notification sent to user ${userId}:`, notification);
+  });
 });
+
 
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -125,10 +153,17 @@ app.use(
   })
 );
 
+app.use((req, res, next) => {
+  req.io = io;
+  req.activeConnection = activeConnection;
+  next();
+});
+
 app.use("/auth", authRoutes);
 app.use("/post", postRouter);
 app.use("/chat", chatRouter);
 app.use("/api", requestRoute);
+app.use("/notification", notificationRoute);
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on ${process.env.PORT}`);

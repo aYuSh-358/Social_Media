@@ -74,7 +74,7 @@
 <body>
     <form id="loginForm">
         <div class="imgcontainer">
-            <img src="/Social_Media/chat log.png" alt="logo" class="logo">
+            <img src="/chat log.png" alt="logo" class="logo">
         </div>
 
         <div class="container">
@@ -121,7 +121,7 @@
                     localStorage.setItem("name", data.user.userName);
                     localStorage.setItem("userProfilePhoto", data.user.userProfilePhoto);
 
-                    window.location.href = "/Social_Media/src/public/chatPage.html";
+                    window.location.href = "/src/public/chatPage.html";
                 } else {
                     alert(data.message || "Login failed. Invalid credentials.");
                 }
