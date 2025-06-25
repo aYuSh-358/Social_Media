@@ -9,6 +9,9 @@ const authRoutes = require("./src/routes/authRoutes");
 const friendRequest = require("./src/models/requestModel");
 const Chat = require("./src/models/chatModels");
 const requestRoute = require("./src/routes/requestRoute");
+const blockRoutes = require("./src/routes/blockRoutes");
+const Block = require("./src/models/blockModel");
+
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
@@ -19,7 +22,7 @@ app.use(cors());
 
 connectDB();
 
-// Socket Implementation
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
@@ -27,11 +30,12 @@ const io = new Server(server, {
 const activeConnection = new Map();
 
 io.on("connection", async (socket) => {
-  // console.log("a user connected", socket.id);
   let userIdForThisSocket = null;
+
   socket.on("registeUser", async (myId) => {
-    // console.log("User is ", myId);
     userIdForThisSocket = myId;
+    socket.userId = myId;
+
     let userSockets = activeConnection.get(myId);
     if (!userSockets) {
       userSockets = new Set();
@@ -40,7 +44,9 @@ io.on("connection", async (socket) => {
     userSockets.add(socket.id);
 
     console.log("Active Connections:", activeConnection);
-    const friend = await friendRequest.aggregate([
+
+    // Send online friends
+    const friends = await friendRequest.aggregate([
       {
         $match: {
           $or: [{ receiver: myId }, { sender: myId }],
@@ -48,8 +54,8 @@ io.on("connection", async (socket) => {
         },
       },
     ]);
-    // console.log(friend);
-    const onlineFriends = friend.filter((f) => {
+
+    const onlineFriends = friends.filter((f) => {
       const friendId = f.sender === myId ? f.receiver : f.sender;
       return (
         activeConnection.has(friendId) &&
@@ -57,45 +63,55 @@ io.on("connection", async (socket) => {
       );
     });
 
-    // console.log("Online Friends (from your friend list):", onlineFriends);
-
-    const onlineFriendIds = onlineFriends.map((f) => {
-      return f.sender === myId ? f.receiver : f.sender;
-    });
-    // console.log("Online Friend IDs:", onlineFriendIds);
+    const onlineFriendIds = onlineFriends.map((f) =>
+      f.sender === myId ? f.receiver : f.sender
+    );
     socket.emit("onlineFriends", onlineFriendIds);
+  });
 
-    socket.on("privateMessage", async ({ senderId, receiverId, message }) => {
-      // console.log('ref', senderId, receiverId);
+  //  block a user
+  socket.on("blockUser", async (data) => {
+    const blockerId = socket.userId;
+    const blockedId = data.blockedId;
 
-      const chat = new Chat({ senderId, receiverId, message });
-      await chat.save();
 
-      const receiverSocketIds = activeConnection.get(receiverId);
-      if (receiverSocketIds) {
-        receiverSocketIds.forEach((socketId) => {
-          io.to(socketId).emit("receivePrivateMessage", {
-            senderId,
-            receiverId,
-            message,
-          });
-        });
-      }
-      //       const receiverSocketId = activeConnection.get(receiverId);
-      // if (receiverSocketId) {
-      //   io.to(receiverSocketId).emit("receivePrivateMessage", { ... });
-      // }
-      // socket.emit("receivePrivateMessage", {
-      //   senderId,
-      //   receiverId,
-      //   message,
-      // });
+
+    const alreadyBlocked = await Block.findOne({ blocker: blockerId, blocked: blockedId });
+    if (!alreadyBlocked) {
+      await Block.create({ blocker: blockerId, blocked: blockedId });
+      socket.emit("userBlocked", { blockedId });
+    }
+  });
+
+  socket.on("privateMessage", async ({ senderId, receiverId, message }) => {
+    const isBlocked = await Block.findOne({
+      blocker: receiverId,
+      blocked: senderId,
     });
+
+    if (isBlocked) {
+      socket.emit("messageBlocked", { receiverId });
+      return;
+    }
+
+
+    const chat = new Chat({ senderId, receiverId, message });
+    await chat.save();
+
+    const receiverSocketIds = activeConnection.get(receiverId);
+    if (receiverSocketIds) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("receivePrivateMessage", {
+          senderId,
+          receiverId,
+          message,
+        });
+      });
+    }
   });
 
   socket.on("disconnect", () => {
-    console.log("user disconnected", socket.id);
-    // Remove socket from user's set
+    console.log("User disconnected:", socket.id);
     for (const [userId, sockets] of activeConnection.entries()) {
       if (sockets.has(socket.id)) {
         sockets.delete(socket.id);
@@ -108,6 +124,7 @@ io.on("connection", async (socket) => {
   });
 });
 
+// Middleware & Routes
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(path.join(__dirname, "src/public")));
@@ -125,11 +142,13 @@ app.use(
   })
 );
 
+// Routes
 app.use("/auth", authRoutes);
 app.use("/post", postRouter);
 app.use("/chat", chatRouter);
 app.use("/api", requestRoute);
+app.use("/block", blockRoutes);
 
 server.listen(process.env.PORT, () => {
-  console.log(`Server is running on ${process.env.PORT}`);
+  console.log(`Server is running on port ${process.env.PORT}`);
 });
