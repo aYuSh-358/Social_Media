@@ -1,5 +1,4 @@
 node_modules/
-uploads/posts/
-uploads/DP/
+uploads/
 view/
 src/controllers/sendEmailController.js

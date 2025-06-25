@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const session = require("express-session");
 const { connectDB } = require("./config/connectDB");
+const Story = require("./src/models/storyModels");
 const postRouter = require("./src/routes/postRoute");
 const chatRouter = require("./src/routes/chatRoutes");
 const bodyParser = require("body-parser");
@@ -130,6 +131,23 @@ app.use("/post", postRouter);
 app.use("/story", storyRoute);
 app.use("/chat", chatRouter);
 app.use("/api", requestRoute);
+
+const updateStoryStatus = async (req, res) => {
+  const stories = await Story.find();
+  let now = new Date();
+  stories.map(async (story) => {
+    // console.log("story : ", story);
+    let createTime = new Date(story.createdAt);
+    timedifference = now - createTime;
+    const hoursePassed = Math.floor(timedifference / (1000 * 60));
+    if (hoursePassed >= 1439) {
+      story.status = "0";
+    }
+    await story.save();
+  });
+};
+
+setInterval(updateStoryStatus, 60000);
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on ${process.env.PORT}`);
