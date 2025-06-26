@@ -2,6 +2,7 @@ const { default: mongoose } = require("mongoose");
 const Post = require("../models/postModel");
 const User = require("../models/authModels");
 const Comment = require("../models/postCommentsModel");
+const { sendNotification } = require("../utils/sendNotification");
 const fs = require("fs");
 
 module.exports.createPost = async (req, res) => {
@@ -233,7 +234,8 @@ module.exports.likePosts = async (req, res) => {
   try {
     const userId = req.params.id;
     const postId = req.body.postId;
-    // console.log(userId, postId);
+    const { io, activeConnection } = req;
+    console.log(userId, postId);
 
     const user = await User.findById(userId);
     if (!user) {
@@ -256,6 +258,17 @@ module.exports.likePosts = async (req, res) => {
     res
       .status(200)
       .json({ Status: "200", message: "Like added to the post successfully" });
+
+    // Create notification
+    await sendNotification({
+      userId: post.userId,
+      senderId: userId,
+      type: "like",
+      postId: post._id,
+      message: `${user.userName} liked your post`,
+      io,
+      activeConnection,
+    });
   } catch (error) {
     res.status(500).json({
       Status: "500",
@@ -269,6 +282,7 @@ module.exports.addComment = async (req, res) => {
   try {
     // console.log(req.params.id);
     const userId = req.params.id;
+    const { io, activeConnection } = req;
     const { postId, comment } = req.body;
     if (!userId || !postId || !comment) {
       res
@@ -293,6 +307,17 @@ module.exports.addComment = async (req, res) => {
     res
       .status(200)
       .json({ Status: "200", message: "Comment added successfully" });
+
+    // Create notification
+    await sendNotification({
+      userId: post.userId,
+      senderId: userId,
+      type: "comment",
+      postId: post._id,
+      message: `${user.userName} commented on your post`,
+      io,
+      activeConnection,
+    });
   } catch (error) {
     res
       .status(500)

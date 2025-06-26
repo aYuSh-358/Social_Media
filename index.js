@@ -14,10 +14,13 @@ const storyRoute = require("./src/routes/storyRoutes");
 const blockRoutes = require("./src/routes/blockRoutes");
 const Block = require("./src/models/blockModel");
 
+const notificationRoute = require("./src/routes/notificationRoute");
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const { sendNotification } = require("./src/utils/sendNotification");
+const Notification = require("./src/models/notificationModels");
 
 const app = express();
 app.use(cors());
@@ -123,9 +126,32 @@ io.on("connection", async (socket) => {
       }
     }
   });
+
+  // Listen for notifications sent from clients
+  socket.on("sendNotification", async ({ userId, notification }) => {
+    const userSockets = activeConnection.get(userId);
+    if (userSockets) {
+      userSockets.forEach((socketId) => {
+        io.to(socketId).emit("receiveNotification", notification);
+      });
+    } else {
+      // User offline - save notification in DB
+      console.log(
+        `User ${userId} is offline. Saving notification in database.`
+      );
+      await sendNotification({
+        userId,
+        senderId: notification.senderId,
+        type: notification.type,
+        message: notification.message,
+        io,
+        activeConnection,
+      });
+    }
+    console.log(`Notification sent to user ${userId}:`, notification);
+  });
 });
 
-// Middleware & Routes
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(path.join(__dirname, "src/public")));
@@ -142,6 +168,18 @@ app.use(
     cookie: { maxAge: parseInt(process.env.JWT_EXPIRE) },
   })
 );
+
+app.use((req, res, next) => {
+  req.io = io;
+  req.activeConnection = activeConnection;
+  next();
+});
+
+app.use((req, res, next) => {
+  req.io = io;
+  req.activeConnection = activeConnection;
+  next();
+});
 
 // Routes
 app.use("/auth", authRoutes);
@@ -167,6 +205,7 @@ const updateStoryStatus = async (req, res) => {
 };
 
 setInterval(updateStoryStatus, 60000);
+app.use("/notification", notificationRoute);
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
