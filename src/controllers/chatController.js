@@ -2,6 +2,69 @@ const Chat = require("../models/chatModels");
 const User = require("../models/authModels");
 const { mongoose } = require("mongoose");
 
+/**
+ * @swagger
+ * /chat/userchat/{sender_id}/{receiver_id}:
+ *   get:
+ *     summary: Get messages between two users
+ *     description: Fetches all messages exchanged between the sender and receiver.
+ *     tags:
+ *       - Chat
+ *     parameters:
+ *       - in: path
+ *         name: sender_id
+ *         required: true
+ *         description: ID of the sender
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *       - in: path
+ *         name: receiver_id
+ *         required: true
+ *         description: ID of the receiver
+ *         schema:
+ *           type: string
+ *           example: 60f5a3f3a7f9d50015c2e123
+ *     responses:
+ *       200:
+ *         description: User chats fetched successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "200"
+ *               message: User chats
+ *               data:
+ *                 - senderId: "60dbf9d3d1fd5c0015f6b2e0"
+ *                   receiverId: "60f5a3f3a7f9d50015c2e123"
+ *                   text: "Hey there!"
+ *       400:
+ *         description: Sender or receiver not found
+ *         content:
+ *           application/json:
+ *             examples:
+ *               SenderNotFound:
+ *                 value:
+ *                   Status: "400"
+ *                   message: Sender not found
+ *               ReceiverNotFound:
+ *                 value:
+ *                   Status: "400"
+ *                   message: Reciver not found
+ *       500:
+ *         description: Messages not found or server error
+ *         content:
+ *           application/json:
+ *             examples:
+ *               MessagesMissing:
+ *                 value:
+ *                   Status: "500"
+ *                   message: Messages not found
+ *               ServerError:
+ *                 value:
+ *                   Status: "500"
+ *                   message: Error while fetching messages
+ */
+
 module.exports.getMessages = async (req, res) => {
   try {
     const { sender_id, receiver_id } = req.params;

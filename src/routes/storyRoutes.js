@@ -13,5 +13,6 @@ router.post(
 router.get("/getStoriesForUser/:id", verifyToken, controller.getStoriesForUser);
 router.get("/archiveStory/:id", verifyToken, controller.archiveStory);
 router.post("/viewStory", verifyToken, controller.viewStory);
+router.delete("/deleteStory/:id", verifyToken, controller.deleteStory);
 
 module.exports = router;

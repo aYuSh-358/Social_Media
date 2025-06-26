@@ -13,7 +13,6 @@ const requestRoute = require("./src/routes/requestRoute");
 const storyRoute = require("./src/routes/storyRoutes");
 const blockRoutes = require("./src/routes/blockRoutes");
 const Block = require("./src/models/blockModel");
-
 const notificationRoute = require("./src/routes/notificationRoute");
 const path = require("path");
 const cors = require("cors");
@@ -21,6 +20,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { sendNotification } = require("./src/utils/sendNotification");
 const Notification = require("./src/models/notificationModels");
+const { swaggerUi, swaggerSpec } = require("./src/middleware/swagger");
 
 const app = express();
 app.use(cors());
@@ -155,6 +155,7 @@ io.on("connection", async (socket) => {
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(path.join(__dirname, "src/public")));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/", (req, res) => {
   res.json("I am alive...!");
@@ -188,6 +189,7 @@ app.use("/story", storyRoute);
 app.use("/chat", chatRouter);
 app.use("/api", requestRoute);
 app.use("/block", blockRoutes);
+app.use("/notification", notificationRoute);
 
 const updateStoryStatus = async (req, res) => {
   const stories = await Story.find();
@@ -205,7 +207,6 @@ const updateStoryStatus = async (req, res) => {
 };
 
 setInterval(updateStoryStatus, 60000);
-app.use("/notification", notificationRoute);
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);

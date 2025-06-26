@@ -7,6 +7,81 @@ const { sendEmail } = require("./sendEmailController");
 require("dotenv").config();
 
 //Register API
+/**
+ * @swagger
+ * /auth/registerUser:
+ *   post:
+ *     summary: Register a new user
+ *     description: Creates a new user account and sends a welcome email. Accepts user details and a profile photo.
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userName
+ *               - userEmail
+ *               - userPassword
+ *               - userDOB
+ *               - userMobileNo
+ *               - userAddress
+ *               - userProfilePhoto
+ *             properties:
+ *               userName:
+ *                 type: string
+ *                 example: John Doe
+ *               userEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: john.doe@example.com
+ *               userPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: myStrongPassword123
+ *               userDOB:
+ *                 type: string
+ *                 format: date
+ *                 example: 1990-01-01
+ *               userMobileNo:
+ *                 type: string
+ *                 example: "9876543210"
+ *               userAddress:
+ *                 type: string
+ *                 example: 123, Baker Street, London
+ *               userProfilePhoto:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
+ *       400:
+ *         description: Bad request (validation errors or user already exists)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       msg:
+ *                         type: string
+ *       500:
+ *         description: Internal server error
+ */
 
 exports.registerUser = async (req, res) => {
   const errors = validationResult(req);
@@ -53,6 +128,37 @@ exports.registerUser = async (req, res) => {
     res.status(500).json({ Status: "500", error: error.message });
   }
 };
+
+/**
+ * @swagger
+ * /auth/getAllRegisterUsers:
+ *   get:
+ *     summary: Get all registered users
+ *     description: Retrieves a list of all users stored in the database.
+ *     tags:
+ *       - Users
+ *     responses:
+ *       200:
+ *         description: A list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error fetching users
+ *                 error:
+ *                   type: object
+ */
+
 exports.getAllRegisterUsers = async (req, res) => {
   try {
     const users = await User.find();
@@ -63,6 +169,51 @@ exports.getAllRegisterUsers = async (req, res) => {
   }
 };
 
+/**
+ * @swagger
+ * /auth/getRegisterUserById/{id}:
+ *   get:
+ *     summary: Get a registered user by ID
+ *     description: Retrieves a user from the database by their unique ID.
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The user ID
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *     responses:
+ *       200:
+ *         description: A user object
+ *         content:
+ *           application/json:
+ *
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error fetching user
+ *                 error:
+ *                   type: object
+ */
 exports.getRegisterUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -92,6 +243,98 @@ exports.getRegisterUserById = async (req, res) => {
 //         res.status(500).json({ message: 'Error updating user', error });
 //     }
 // };
+
+/**
+ * @swagger
+ * /auth/updateRegisterUser/{id}:
+ *   put:
+ *     summary: Update a registered user by ID
+ *     description: Updates a user's information, including password and profile photo if provided.
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the user to update
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userName:
+ *                 type: string
+ *                 example: Jane Doe
+ *               userEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: jane.doe@example.com
+ *               userPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: newSecurePassword123
+ *               userDOB:
+ *                 type: string
+ *                 format: date
+ *                 example: 1992-08-15
+ *               userMobileNo:
+ *                 type: string
+ *                 example: "9123456789"
+ *               userAddress:
+ *                 type: string
+ *                 example: 456, Park Lane, NYC
+ *               userProfilePhoto:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User updated successfully
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       msg:
+ *                         type: string
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *       500:
+ *         description: Server error while updating user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error updating user
+ *                 error:
+ *                   type: string
+ */
 
 exports.updateRegisterUser = async (req, res) => {
   const errors = validationResult(req);
@@ -133,6 +376,57 @@ exports.updateRegisterUser = async (req, res) => {
   }
 };
 
+/**
+ * @swagger
+ * /auth/deleteRegisterUser/{id}:
+ *   delete:
+ *     summary: Delete a registered user by ID
+ *     description: Deletes a user from the database using their unique ID.
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user to delete
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User deleted successfully
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Error deleting user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error deleting user
+ *                 error:
+ *                   type: string
+ */
+
 exports.deleteRegisterUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -145,7 +439,63 @@ exports.deleteRegisterUser = async (req, res) => {
   }
 };
 
-//Login API
+/**
+ * @swagger
+ * /auth/loginUser:
+ *   post:
+ *     summary: Login a user
+ *     description: Authenticates a user with email and password. Returns a JWT token upon successful login.
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userEmail
+ *               - userPassword
+ *             properties:
+ *               userEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: jane.doe@example.com
+ *               userPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: SecurePass123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Login successful
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid credentials or user not found
+ *         content:
+ *           application/json:
+ *       500:
+ *         description: Server error during login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Server error
+ */
 
 exports.loginUser = async (req, res) => {
   const errors = validationResult(req);

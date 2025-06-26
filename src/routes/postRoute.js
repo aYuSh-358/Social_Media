@@ -13,7 +13,7 @@ router.post(
 router.all("/getPosts", verifyToken, controller.getPosts); // id in body require of user
 // router.get("/getUserPost/:id", verifyToken, controller.getUserPost);
 // router.get("/getAllUserPost", verifyToken, controller.getAllUserPost);
-router.post("/likePosts/:id", verifyToken, controller.likePosts);  // in body- postid and in param-userid require
+router.post("/likePosts/:id", verifyToken, controller.likePosts); // in body- postid and in param-userid require
 router.post("/addComment/:id", verifyToken, controller.addComment);
 router.put(
   "/updatePost",
@@ -21,5 +21,6 @@ router.put(
   upload.single("post"),
   controller.updatePost
 );
+router.delete("/deletePost", verifyToken, controller.deletePost);
 
 module.exports = router;

@@ -4,6 +4,54 @@ const User = require("../models/authModels");
 const { sendNotification } = require("../utils/sendNotification");
 
 // Send
+/**
+ * @swagger
+ * /api/sendRequest:
+ *   post:
+ *     summary: Send a friend request
+ *     description: Sends a friend request from one user to another. Prevents self-requests and duplicates.
+ *     tags:
+ *       - Request
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - senderId
+ *               - receiverId
+ *             properties:
+ *               senderId:
+ *                 type: string
+ *                 example: 60dbf9d3d1fd5c0015f6b2e0
+ *               receiverId:
+ *                 type: string
+ *                 example: 60f5a3f3a7f9d50015c2e123
+ *     responses:
+ *       200:
+ *         description: Request sent or already exists
+ *         content:
+ *           application/json:
+ *             examples:
+ *               Success:
+ *                 value:
+ *                   message: Friend request sent
+ *               SelfRequest:
+ *                 value:
+ *                   message: Cannot send request to yourself
+ *               Duplicate:
+ *                 value:
+ *                   message: Friend request already sent
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Server error.
+ *               error: "Internal server error message"
+ */
+
 exports.sendRequest = async (req, res) => {
   const { senderId, receiverId } = req.body;
   const { io, activeConnection } = req;
@@ -42,6 +90,45 @@ exports.sendRequest = async (req, res) => {
 };
 
 //status
+/**
+ * @swagger
+ * /api/checkStatus/{id}:
+ *   get:
+ *     summary: Check status of a friend request
+ *     description: Returns the status, sender, and receiver of a specific friend request by ID.
+ *     tags:
+ *       - Request
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the friend request
+ *         schema:
+ *           type: string
+ *           example: 665c3f9cb5f2e80012c21f0d
+ *     responses:
+ *       200:
+ *         description: Friend request status found
+ *         content:
+ *           application/json:
+ *             example:
+ *               sender: 60dbf9d3d1fd5c0015f6b2e0
+ *               receiver: 60f5a3f3a7f9d50015c2e123
+ *               status: pending
+ *       404:
+ *         description: Request not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: No request found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Server error
+ */
+
 exports.checkStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -63,6 +150,62 @@ exports.checkStatus = async (req, res) => {
 };
 
 // Accept or Reject
+/**
+ * @swagger
+ * /api/respondToRequest/{id}:
+ *   put:
+ *     summary: Respond to a friend request
+ *     description: Accepts or rejects a friend request by updating its status.
+ *     tags:
+ *       - Request
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the friend request
+ *         schema:
+ *           type: string
+ *           example: 665c3f9cb5f2e80012c21f0d
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [accepted, rejected]
+ *                 example: accepted
+ *     responses:
+ *       200:
+ *         description: Friend request successfully updated
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Request accepted
+ *       400:
+ *         description: Invalid status or input
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Invalid status
+ *       404:
+ *         description: Friend request not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Request not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Server error
+ */
+
 exports.respondToRequest = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -96,6 +239,47 @@ exports.respondToRequest = async (req, res) => {
 };
 
 //friend list
+/**
+ * @swagger
+ * /api/friendList/{id}:
+ *   get:
+ *     summary: Get list of all accepted friends for a user
+ *     description: Returns all users who have an accepted friend request with the given user ID.
+ *     tags:
+ *       - Request
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: User ID to retrieve friends for
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *     responses:
+ *       200:
+ *         description: List of friends or no friends found
+ *         content:
+ *           application/json:
+ *             examples:
+ *               FriendsFound:
+ *                 value:
+ *                   totalFriends: 2
+ *                   friends:
+ *                     - userName: Alice
+ *                       userEmail: alice@example.com
+ *                     - userName: Bob
+ *                       userEmail: bob@example.com
+ *               NoFriends:
+ *                 value:
+ *                   message: No friends found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Server error
+ */
+
 exports.friendList = async (req, res) => {
   try {
     const userId = req.params.id;

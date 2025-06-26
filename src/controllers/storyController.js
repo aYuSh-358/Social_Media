@@ -3,6 +3,59 @@ const User = require("../models/authModels");
 const Story = require("../models/storyModels");
 const friendRequest = require("../models/requestModel");
 
+/**
+ * @swagger
+ * /story/addStory/{id}:
+ *   post:
+ *     summary: Add a new story
+ *     description: Uploads a story (image or video) for a user with optional permission and status flags.
+ *     tags:
+ *       - Stories
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user adding the story
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - story
+ *             properties:
+ *               story:
+ *                 type: string
+ *                 format: binary
+ *               permission:
+ *                 type: string
+ *                 example: public
+ *               status:
+ *                 type: string
+ *                 example: active
+ *     responses:
+ *       200:
+ *         description: Story added successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "200"
+ *               message: Story Added successfully
+ *       500:
+ *         description: User not found or internal server error
+ *         content:
+ *           application/json:
+ *             examples:
+ *               UserNotFound:
+ *                 value:
+ *                   Status: "500"
+ *                   message: User not found
+ */
+
 module.exports.addStory = async (req, res) => {
   try {
     const story = req.file.filename;
@@ -29,6 +82,51 @@ module.exports.addStory = async (req, res) => {
     console.log(error);
   }
 };
+
+/**
+ * @swagger
+ * /story/getStoriesForUser/{id}:
+ *   get:
+ *     summary: Get stories for a specific user
+ *     description: Retrieves all active stories of the user's friends based on accepted friend requests.
+ *     tags:
+ *       - Stories
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user to get stories for
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *     responses:
+ *       200:
+ *         description: Successfully fetched the stories
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "200"
+ *               message: "All Stories"
+ *               data:
+ *                 - user:
+ *                     userName: "John Doe"
+ *                   storyId: "60f5a3f3a7f9d50015c2e123"
+ *                   story: "http://localhost:5000/uploads/story/60dbf9d3d1fd5c0015f6b2e0/story.jpg"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "500"
+ *               message: "Internal Server Error"
+ *       404:
+ *         description: No active stories found for friends
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "200"
+ *               message: "No active stories found for your friends."
+ */
 
 module.exports.getStoriesForUser = async (req, res) => {
   try {
@@ -99,6 +197,45 @@ module.exports.getStoriesForUser = async (req, res) => {
   }
 };
 
+/**
+ * @swagger
+ * /story/archiveStory/{id}:
+ *   get:
+ *     summary: Get archived stories for a user
+ *     description: Fetches all stories created by a specific user (archives).
+ *     tags:
+ *       - Stories
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user whose stories are being retrieved
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *     responses:
+ *       200:
+ *         description: User stories retrieved successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "200"
+ *               mesage: "All user Stories"
+ *               data:
+ *                 - _id: "60f5a3f3a7f9d50015c2e123"
+ *                   userId: "60dbf9d3d1fd5c0015f6b2e0"
+ *                   story: "story.jpg"
+ *       500:
+ *         description: No stories exist or server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "500"
+ *               message:
+ *                 Status: "500"
+ *                 message: "No story exist"
+ */
+
 module.exports.archiveStory = async (req, res) => {
   const userId = req.params.id;
   try {
@@ -127,6 +264,62 @@ module.exports.archiveStory = async (req, res) => {
   }
 };
 
+/**
+ * @swagger
+ * /story/viewStory:
+ *   post:
+ *     summary: Mark a story as viewed by a user
+ *     description: Tracks that a user has viewed another user's story. Ignores self-views and prevents duplicate entries.
+ *     tags:
+ *       - Stories
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - storyId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: 60dbf9d3d1fd5c0015f6b2e0
+ *               storyId:
+ *                 type: string
+ *                 example: 60f5a3f3a7f9d50015c2e123
+ *     responses:
+ *       201:
+ *         description: Story viewed successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "201"
+ *               message: View Story
+ *       204:
+ *         description: Self view or already viewed
+ *         content:
+ *           application/json:
+ *             examples:
+ *               SelfView:
+ *                 value:
+ *                   message: You viewed your own story
+ *       400:
+ *         description: User or Story not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "400"
+ *               message: Story not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "500"
+ *               message: {}
+ */
+
 module.exports.viewStory = async (req, res) => {
   try {
     const { userId, storyId } = req.body;
@@ -150,6 +343,75 @@ module.exports.viewStory = async (req, res) => {
       await story.save();
     }
     res.status(201).json({ Status: "201", message: "View Story" });
+  } catch (error) {
+    res.status(500).json({ Status: "500", message: error });
+  }
+};
+
+/**
+ * @swagger
+ * /story/deleteStory/{id}:
+ *   delete:
+ *     summary: Delete a story by storyId and userId
+ *     description: Deletes a story from the system based on user and story IDs.
+ *     tags:
+ *       - Stories
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user requesting deletion
+ *         schema:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - storyId
+ *             properties:
+ *               storyId:
+ *                 type: string
+ *                 example: 60f5a3f3a7f9d50015c2e123
+ *     responses:
+ *       200:
+ *         description: Story deleted successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "200"
+ *               message: Story deleted Successfully
+ *       400:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "400"
+ *               message: User not found
+ *       500:
+ *         description: Server error while deleting story
+ *         content:
+ *           application/json:
+ *             example:
+ *               Status: "500"
+ *               message: {}
+ */
+
+module.exports.deleteStory = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const storyId = req.body.storyId;
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      res.status(400).json({ Status: "400", message: " User not found" });
+    }
+    const story = await Story.findByIdAndDelete(storyId);
+    res
+      .status(200)
+      .json({ Status: "200", message: "Story deleted Successfully" });
   } catch (error) {
     res.status(500).json({ Status: "500", message: error });
   }
