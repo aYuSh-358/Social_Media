@@ -1,98 +1,176 @@
 const mongoose = require("mongoose");
 const friendRequest = require("../models/requestModel");
 const User = require("../models/authModels");
-const { sendNotification } = require("../utils/sendNotification");
+const { sendNotification } = require('../utils/sendNotification');
 
 // Send
 exports.sendRequest = async (req, res) => {
-  const { senderId, receiverId } = req.body;
-  const { io, activeConnection } = req;
+  try {
+    const { senderId, receiverId } = req.body;
+    const { io, activeConnection } = req;
+    const senderUser = await User.findById(senderId).select("userName");
 
-  if (senderId == receiverId) {
-    return res.status(200).json({ message: "Cannot send request to yourself" });
+    if (senderId == receiverId) {
+      return res.status(200).json({ message: "Cannot send request to yourself" });
+    }
+
+    const existing = await friendRequest.findOne({
+      sender: senderId,
+      receiver: receiverId,
+    });
+
+    if (existing) {
+      return res.status(200).json({ message: "Friend request already sent" });
+    }
+
+    const request = new friendRequest({
+      sender: senderId,
+      receiver: receiverId,
+      status: "pending",
+    });
+
+    await request.save();
+    res.status(200).json({ message: "Friend request sent" });
+
+    // Create notification
+    await sendNotification({
+      userId: receiverId,
+      senderId: senderId,
+      type: "follow-request",
+      message: `${senderUser.userName} sent you a friend request`,
+      io,
+      activeConnection,
+    });
+
+  } catch (error) {
+    console.error("Error sending friend request:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  const existing = await friendRequest.findOne({
-    sender: senderId,
-    receiver: receiverId,
-  });
-
-  if (existing) {
-    return res.status(200).json({ message: "Friend request already sent" });
-  }
-
-  const request = new friendRequest({
-    sender: senderId,
-    receiver: receiverId,
-    status: "pending",
-  });
-
-  await request.save();
-  res.status(200).json({ message: "Friend request sent" });
-
-  // Create notification
-  await sendNotification({
-    userId: receiverId,
-    senderId: senderId,
-    type: "follow-request",
-    message: `${req.userName} sent you a friend request`,
-    io,
-    activeConnection,
-  });
 };
 
 //status
+// exports.checkStatus = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     const request = await friendRequest.findById(id);
+
+//     if (!request) {
+//       return res.status(404).json({ message: "No request found" });
+//     }
+
+//     res.status(200).json({
+//       sender: request.sender,
+//       receiver: request.receiver,
+//       status: request.status,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
+//Check status
 exports.checkStatus = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id: userId } = req.params;
 
-    const request = await friendRequest.findById(id);
+    // Find requests where user is sender or receiver
+    const requests = await friendRequest.find({
+      $or: [{ sender: userId }, { receiver: userId }]
+    });
 
-    if (!request) {
-      return res.status(404).json({ message: "No request found" });
+    if (!requests.length) {
+      return res.status(404).json({ message: "No requests found" });
     }
 
-    res.status(200).json({
-      sender: request.sender,
-      receiver: request.receiver,
-      status: request.status,
+    const userIds = new Set();
+    requests.forEach(req => {
+      userIds.add(req.sender.toString());
+      userIds.add(req.receiver.toString());
     });
+
+    const users = await User.find({ _id: { $in: Array.from(userIds) } }).select('userName userProfilePhoto');
+
+    const userMap = {};
+    users.forEach(user => {
+      userMap[user._id.toString()] = user;
+    });
+
+    const sentRequests = [];
+    const receivedRequests = [];
+
+    requests.forEach(req => {
+      const data = {
+        id: req._id,
+        status: req.status,
+        //createdAt: req.createdAt
+      };
+
+      if (req.sender.toString() == userId) {
+        // User sent the request
+        const receiver = userMap[req.receiver.toString()];
+        data.receiver = req.receiver;
+        data.receiverName = receiver?.userName || 'Unknown';
+        data.receiverProfilePhoto = receiver?.userProfilePhoto || null;
+        sentRequests.push(data);
+
+      } else {
+        // User received the request
+        const sender = userMap[req.sender.toString()];
+        data.sender = req.sender;
+        data.senderName = sender?.userName || 'Unknown';
+        data.senderProfilePhoto = sender?.userProfilePhoto || null;
+        receivedRequests.push(data);
+      }
+    });
+
+    return res.status(200).json({ sentRequests, receivedRequests });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
 // Accept or Reject
 exports.respondToRequest = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  const { io, activeConnection } = req;
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const { io, activeConnection } = req;
 
-  if (!["accepted", "rejected"].includes(status)) {
-    return res.status(400).json({ message: "Invalid status" });
+    if (!["accepted", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const request = await friendRequest.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    res.status(200).json({ message: `Request ${status}` });
+
+    const receiverUser = await User.findById(request.receiver).select("userName");
+
+    // Create notification for accepted request
+    await sendNotification({
+      userId: request.sender,
+      senderId: request.receiver,
+      type: "follow-accepted",
+      message: `Your friend request has been ${status} by ${receiverUser.userName}`,
+      io,
+      activeConnection,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
-
-  const request = await friendRequest.findByIdAndUpdate(
-    id,
-    { status },
-    { new: true }
-  );
-
-  if (!request) {
-    return res.status(404).json({ message: "Request not found" });
-  }
-
-  res.status(200).json({ message: `Request ${status}` });
-
-  // Create notification for accepted request
-  await sendNotification({
-    userId: request.sender,
-    senderId: request.receiver,
-    type: "follow-accepted",
-    message: `Your friend request has been ${status} by ${request.receiver}`,
-    io,
-    activeConnection,
-  });
 };
 
 //friend list
@@ -126,3 +204,18 @@ exports.friendList = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
