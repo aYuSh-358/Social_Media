@@ -21,7 +21,7 @@ const notificationSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         default: null
     }, // only for like/comment
-    isRead:
+    seen:
     {
         type: Boolean,
         default: false

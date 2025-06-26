@@ -120,7 +120,7 @@ exports.friendList = async (req, res) => {
       "userName userEmail"
     );
 
-    res.status(200).json({ friends });
+    res.status(200).json({ friends, totalFriends: friends.length });
   } catch (error) {
     console.error("Error fetching friend list:", error);
     res.status(500).json({ message: "Server error" });
