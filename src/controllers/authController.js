@@ -55,7 +55,7 @@ exports.registerUser = async (req, res) => {
 };
 exports.getAllRegisterUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select("userName userEmail userProfilePhoto");;
     // console.log(users);
     res.status(200).json(users);
   } catch (error) {
@@ -65,7 +65,7 @@ exports.getAllRegisterUsers = async (req, res) => {
 
 exports.getRegisterUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select("userName userEmail userProfilePhoto");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -147,6 +147,41 @@ exports.deleteRegisterUser = async (req, res) => {
 
 //Login API
 
+// exports.loginUser = async (req, res) => {
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     return res.status(400).json({ errors: errors.array() });
+//   }
+
+//   try {
+//     const { userEmail, userPassword } = req.body;
+
+//     const existingUser = await User.findOne({ userEmail });
+//     if (!existingUser) {
+//       return res.status(400).json({ message: "User not found" });
+//     }
+
+//     const isMatch = await bcrypt.compare(
+//       userPassword,
+//       existingUser.userPassword
+//     );
+//     if (!isMatch) {
+//       return res.status(400).json({ message: "Invalid credentials" });
+//     }
+
+//     // Token expire session
+//     const token = jwt.sign(
+//       { userId: existingUser._id },
+//       process.env.JWT_SECRET,
+//       { expiresIn: process.env.JWT_EXPIRE }
+//     );
+//     res
+//       .status(200)
+//       .json({ message: "Login successful", user: existingUser, token });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 exports.loginUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -156,29 +191,31 @@ exports.loginUser = async (req, res) => {
   try {
     const { userEmail, userPassword } = req.body;
 
-    const existingUser = await User.findOne({ userEmail });
+    const existingUser = await User.findOne({ userEmail }).select(
+      "userName userEmail userProfilePhoto"
+    );
+
     if (!existingUser) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const isMatch = await bcrypt.compare(
-      userPassword,
-      existingUser.userPassword
-    );
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    // Token expire session
     const token = jwt.sign(
       { userId: existingUser._id },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRE }
     );
-    res
-      .status(200)
-      .json({ message: "Login successful", user: existingUser, token });
+
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        userName: existingUser.userName,
+        userEmail: existingUser.userEmail,
+        userProfilePhoto: existingUser.userProfilePhoto
+      },
+      token
+    });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ error: error.message });
   }
 };
