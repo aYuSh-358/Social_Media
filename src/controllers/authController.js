@@ -161,7 +161,9 @@ exports.registerUser = async (req, res) => {
 
 exports.getAllRegisterUsers = async (req, res) => {
   try {
-    const users = await User.find().select("userName userEmail userProfilePhoto");;
+    const users = await User.find().select(
+      "userName userEmail userProfilePhoto"
+    );
     // console.log(users);
     res.status(200).json(users);
   } catch (error) {
@@ -216,7 +218,9 @@ exports.getAllRegisterUsers = async (req, res) => {
  */
 exports.getRegisterUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select("userName userEmail userProfilePhoto");
+    const user = await User.findById(req.params.id).select(
+      "userName userEmail userProfilePhoto"
+    );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -558,11 +562,12 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       user: {
+        _id: existingUser._id,
         userName: existingUser.userName,
         userEmail: existingUser.userEmail,
-        userProfilePhoto: existingUser.userProfilePhoto
+        userProfilePhoto: existingUser.userProfilePhoto,
       },
-      token
+      token,
     });
   } catch (error) {
     console.error("Login error:", error);
