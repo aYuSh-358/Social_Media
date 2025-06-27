@@ -7,7 +7,7 @@ const options = {
     info: {
       title: "Social Media",
       version: "1.0.0",
-      description: "API documentation for your Node.js project",
+      description: "Social Media project API Documentation",
     },
     servers: [
       {

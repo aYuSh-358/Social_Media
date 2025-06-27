@@ -326,25 +326,39 @@ module.exports.viewStory = async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      res.status(400).json({ Status: "400", message: "User not found" });
+      return res
+        .status(404)
+        .json({ status: "404", message: "User not found." });
     }
+
     const story = await Story.findById(storyId);
     if (!story) {
-      res.status(400).json({ Status: "400", message: "Story not found" });
+      return res
+        .status(404)
+        .json({ status: "404", message: "Story not found." });
     }
-    if ((story.userId = userId)) {
-      res.status(204).json({ message: "You viewed your own story" });
+
+    if (story.userId.equals(userId)) {
+      return res.status(200).json({ message: "You viewed your own story." });
     }
-    let alreadyView = story.viewBy.includes(userId);
-    if (alreadyView) {
-      res.status(204);
+
+    const alreadyViewed = story.viewBy.includes(userId);
+    // console.log(alreadyViewed);
+
+    if (alreadyViewed) {
+      return res.status(200).json({ message: "Story already viewed." });
     } else {
       story.viewBy.push(userId);
       await story.save();
+      return res
+        .status(201)
+        .json({ status: "201", message: "Story viewed successfully." });
     }
-    res.status(201).json({ Status: "201", message: "View Story" });
   } catch (error) {
-    res.status(500).json({ Status: "500", message: error });
+    console.error("Error viewing story:", error);
+    return res
+      .status(500)
+      .json({ status: "500", message: "An unexpected error occurred." });
   }
 };
 
