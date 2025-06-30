@@ -312,7 +312,13 @@ exports.getAllRegisterUsers = async (req, res) => {
  */
 exports.getRegisterUserById = async (req, res) => {
   try {
+<<<<<<< HEAD
     const user = await User.findById(req.params.id).select('-userPassword');
+=======
+    const user = await User.findById(req.params.id).select(
+      "userName userEmail userProfilePhoto"
+    );
+>>>>>>> b4517befa13b5e9435a7bfda579dfaeed733202d
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -654,6 +660,7 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       user: {
+        _id: existingUser._id,
         userName: existingUser.userName,
         userEmail: existingUser.userEmail,
         userProfilePhoto: existingUser.userProfilePhoto,
