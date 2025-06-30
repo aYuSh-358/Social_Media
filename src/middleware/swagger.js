@@ -11,9 +11,19 @@ const options = {
     },
     servers: [
       {
+        // url: "https://talksy-xzl6.onrender.com",
         url: "http://localhost:5000",
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
   },
   apis: [
     "./src/controllers/authController.js",
