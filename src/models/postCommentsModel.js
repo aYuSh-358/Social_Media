@@ -6,13 +6,19 @@ const postCommentsSchema = new mongoose.Schema({
     ref: "Post",
     require: true,
   },
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    require: true,
-  },
-  comments: {
-    type: String,
-    require: true,
-  },
+  comments: [
+    {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      comment: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
 });
+
+module.exports = mongoose.model("Comment", postCommentsSchema);
