@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+const { validationResult } = require('express-validator');
+const User = require("../models/authModel");
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+require('dotenv').config();
+=======
 const { validationResult } = require("express-validator");
 const User = require("../models/authModels");
 const bcrypt = require("bcryptjs");
@@ -5,6 +13,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { sendEmail } = require("./sendEmailController");
 require("dotenv").config();
+>>>>>>> f3dc3216b59f1b690640dad9a5ca5a6ddbd518e6
 
 //Register API
 /**
@@ -103,9 +112,15 @@ exports.registerUser = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
+<<<<<<< HEAD
+    try {
+        const { userName, userEmail, userPassword, userDOB, userMobileNo, userAddress } = req.body;
+        const userProfilePhoto = req.file;
+=======
 
     const hashedPassword = await bcrypt.hash(userPassword, 10);
     //console.log(userProfilePhoto);
+>>>>>>> f3dc3216b59f1b690640dad9a5ca5a6ddbd518e6
 
     const user = new User({
       userName,
@@ -117,11 +132,89 @@ exports.registerUser = async (req, res) => {
       userProfilePhoto: userProfilePhoto.filename,
     });
 
+<<<<<<< HEAD
+        const hashedPassword = await bcrypt.hash(userPassword, 10);
+        //console.log(userProfilePhoto);
+
+        const user = new User({
+            userName,
+            userEmail,
+            userPassword: hashedPassword,
+            userDOB,
+            userMobileNo,
+            userAddress,
+            userProfilePhoto: userProfilePhoto.filename
+        });
+
+        console.log(user);
+
+
+        await user.save();
+        res.status(201).json({ message: 'User registered successfully', user });
+    } catch (error) {
+        console.log(error);
+
+        res.status(500).json({ Status: '500', error: error.message });
+    }
+};
+exports.getAllRegisterUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching users', error });
+    }
+};
+
+exports.getRegisterUserById = async (req, res) => {
+    try {
+
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user', error });
+    }
+};
+
+exports.updateRegisterUser = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const updateRegisterUser = await User.findByIdAndUpdate(req.params.id, req.body, req.file, { new: true });
+        console.log(updateRegisterUser);
+        if (!updateRegisterUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ message: 'User updated successfully', user: updateRegisterUser });
+
+
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating user', error });
+    }
+};
+
+exports.deleteRegisterUser = async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting user', error });
+    }
+};
+=======
     // console.log(user);
 
     await user.save();
     sendEmail(user);
-    res.status(201).json({ message: "User registered successfully", user });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.log(error);
 
@@ -181,6 +274,7 @@ exports.registerUser = async (req, res) => {
  *                 error:
  *                   type: object
  */
+>>>>>>> f3dc3216b59f1b690640dad9a5ca5a6ddbd518e6
 
 exports.getAllRegisterUsers = async (req, res) => {
   try {
@@ -254,9 +348,13 @@ exports.getAllRegisterUsers = async (req, res) => {
  */
 exports.getRegisterUserById = async (req, res) => {
   try {
+<<<<<<< HEAD
+    const user = await User.findById(req.params.id).select('-userPassword');
+=======
     const user = await User.findById(req.params.id).select(
       "userName userEmail userProfilePhoto"
     );
+>>>>>>> b4517befa13b5e9435a7bfda579dfaeed733202d
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
