@@ -121,7 +121,7 @@ exports.registerUser = async (req, res) => {
 
     await user.save();
     sendEmail(user);
-    res.status(201).json({ message: "User registered successfully", user });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.log(error);
 
@@ -218,9 +218,7 @@ exports.getAllRegisterUsers = async (req, res) => {
  */
 exports.getRegisterUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select(
-      "userName userEmail userProfilePhoto"
-    );
+    const user = await User.findById(req.params.id).select('-userPassword');
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
