@@ -9,7 +9,7 @@ const User = require("../models/authModels");
  *     summary: Block a user
  *     description: Allows a user to block another user. Prevents self-blocking and duplicate blocks.
  *     tags:
- *       - Request
+ *       - Blocks
  *     requestBody:
  *       required: true
  *       content:
@@ -31,28 +31,36 @@ const User = require("../models/authModels");
  *         description: User blocked successfully
  *         content:
  *           application/json:
- *             example:
- *               message: User blocked successfully.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User blocked successfully.
  *       400:
  *         description: Invalid request (e.g. self-blocking or duplicate block)
  *         content:
  *           application/json:
- *             examples:
- *               SelfBlock:
- *                 value:
- *                   message: You cannot block yourself.
- *               AlreadyBlocked:
- *                 value:
- *                   message: User is already blocked.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: You cannot block yourself.
  *       500:
  *         description: Server error
  *         content:
  *           application/json:
- *             example:
- *               message: Server error.
- *               error: "Error message"
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error.
+ *                 error:
+ *                   type: string
+ *                   example: Error message
  */
-
 exports.blockUser = async (req, res) => {
   try {
     const { blockerId, blockedId } = req.body;
@@ -84,12 +92,12 @@ exports.blockUser = async (req, res) => {
 
 /**
  * @swagger
- * /bolock/unblockUser:
+ * /block/unblockUser:
  *   post:
  *     summary: Unblock a user
  *     description: Allows a user to unblock someone they have previously blocked.
  *     tags:
- *       - Request
+ *       - Blocks
  *     requestBody:
  *       required: true
  *       content:
@@ -111,23 +119,36 @@ exports.blockUser = async (req, res) => {
  *         description: User unblocked successfully
  *         content:
  *           application/json:
- *             example:
- *               message: User unblocked successfully.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User unblocked successfully.
  *       400:
  *         description: User is not blocked
  *         content:
  *           application/json:
- *             example:
- *               message: User is not blocked.
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User is not blocked.
  *       500:
  *         description: Server error
  *         content:
  *           application/json:
- *             example:
- *               message: Server error.
- *               error: "Error message"
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error.
+ *                 error:
+ *                   type: string
+ *                   example: Error message
  */
-
 exports.unblockUser = async (req, res) => {
   try {
     const { blockerId, blockedId } = req.body;
@@ -160,7 +181,7 @@ exports.unblockUser = async (req, res) => {
  *     summary: Get list of users blocked by a specific user
  *     description: Retrieves all users that have been blocked by the provided blocker user ID.
  *     tags:
- *       - Request
+ *       - Blocks
  *     parameters:
  *       - in: path
  *         name: blockerId
@@ -174,20 +195,37 @@ exports.unblockUser = async (req, res) => {
  *         description: List of blocked users
  *         content:
  *           application/json:
- *             example:
- *               blockedUsers:
- *                 - blocked:
- *                     username: johndoe
- *                     email: johndoe@example.com
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 blockedUsers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       blocked:
+ *                         type: object
+ *                         properties:
+ *                           username:
+ *                             type: string
+ *                             example: johndoe
+ *                           email:
+ *                             type: string
+ *                             example: johndoe@example.com
  *       500:
  *         description: Server error while fetching blocked users
  *         content:
  *           application/json:
- *             example:
- *               message: Server error.
- *               error: "Error message"
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Server error.
+ *                 error:
+ *                   type: string
+ *                   example: Error message
  */
-
 exports.getBlockedUsers = async (req, res) => {
   try {
     const { blockerId } = req.params;
