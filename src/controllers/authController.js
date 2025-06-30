@@ -6,6 +6,39 @@ const mongoose = require("mongoose");
 const { sendEmail } = require("./sendEmailController");
 require("dotenv").config();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *         userName:
+ *           type: string
+ *           example: John Doe
+ *         userEmail:
+ *           type: string
+ *           example: johndoe@example.com
+ *         userPassword:
+ *           type: string
+ *           example: hashedpassword123
+ *         userDOB:
+ *           type: string
+ *           example: 1990-01-01
+ *         userMobileNo:
+ *           type: string
+ *           example: "9876543210"
+ *         userAddress:
+ *           type: string
+ *           example: 123, Baker Street, London
+ *         userProfilePhoto:
+ *           type: string
+ *           example: https://example.com/photo.jpg
+ */
+
 //Register API
 /**
  * @swagger
@@ -134,9 +167,11 @@ exports.registerUser = async (req, res) => {
  * /auth/getAllRegisterUsers:
  *   get:
  *     summary: Get all registered users
- *     description: Retrieves a list of all users stored in the database.
+ *     description: Retrieves a list of all users stored in the database. Requires JWT authentication.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of users
@@ -145,6 +180,27 @@ exports.registerUser = async (req, res) => {
  *             schema:
  *               type: array
  *               items:
+ *                 type: object
+ *                 properties:
+ *                   userName:
+ *                     type: string
+ *                     example: John Doe
+ *                   userEmail:
+ *                     type: string
+ *                     example: johndoe@example.com
+ *                   userProfilePhoto:
+ *                     type: string
+ *                     example: https://example.com/photo.jpg
+ *       401:
+ *         description: Unauthorized - JWT token missing or invalid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized
  *       500:
  *         description: Internal server error
  *         content:
@@ -179,6 +235,8 @@ exports.getAllRegisterUsers = async (req, res) => {
  *     description: Retrieves a user from the database by their unique ID.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -192,7 +250,18 @@ exports.getAllRegisterUsers = async (req, res) => {
  *         description: A user object
  *         content:
  *           application/json:
- *
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userName:
+ *                   type: string
+ *                   example: John Doe
+ *                 userEmail:
+ *                   type: string
+ *                   example: johndoe@example.com
+ *                 userProfilePhoto:
+ *                   type: string
+ *                   example: https://example.com/photo.jpg
  *       404:
  *         description: User not found
  *         content:
@@ -230,24 +299,6 @@ exports.getRegisterUserById = async (req, res) => {
   }
 };
 
-// exports.updateRegisterUser = async (req, res) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//         return res.status(400).json({ errors: errors.array() });
-//     }
-//     try {
-//         const updateRegisterUser = await User.findByIdAndUpdate(req.params.id, req.body, req.file, { new: true });
-//         console.log(updateRegisterUser);
-//         if (!updateRegisterUser) {
-//             return res.status(404).json({ message: 'User not found' });
-//         }
-//         res.status(200).json({ message: 'User updated successfully', user: updateRegisterUser });
-
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error updating user', error });
-//     }
-// };
-
 /**
  * @swagger
  * /auth/updateRegisterUser/{id}:
@@ -256,6 +307,8 @@ exports.getRegisterUserById = async (req, res) => {
  *     description: Updates a user's information, including password and profile photo if provided.
  *     tags:
  *       - Users
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -307,7 +360,17 @@ exports.getRegisterUserById = async (req, res) => {
  *                   type: string
  *                   example: User updated successfully
  *                 user:
- *                   $ref: '#/components/schemas/User'
+ *                   type: object
+ *                   properties:
+ *                     userName:
+ *                       type: string
+ *                       example: Jane Doe
+ *                     userEmail:
+ *                       type: string
+ *                       example: jane.doe@example.com
+ *                     userProfilePhoto:
+ *                       type: string
+ *                       example: https://example.com/photo.jpg
  *       400:
  *         description: Validation error
  *         content:
@@ -326,6 +389,12 @@ exports.getRegisterUserById = async (req, res) => {
  *         description: User not found
  *         content:
  *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  *       500:
  *         description: Server error while updating user
  *         content:
@@ -484,11 +553,40 @@ exports.deleteRegisterUser = async (req, res) => {
  *                   type: string
  *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *                 user:
- *                   $ref: '#/components/schemas/User'
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 60dbf9d3d1fd5c0015f6b2e0
+ *                     userName:
+ *                       type: string
+ *                       example: John Doe
+ *                     userEmail:
+ *                       type: string
+ *                       example: johndoe@example.com
+ *                     userProfilePhoto:
+ *                       type: string
+ *                       example: https://example.com/photo.jpg
  *       400:
  *         description: Invalid credentials or user not found
  *         content:
  *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       401:
+ *         description: Unauthorized - Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid credentials
  *       500:
  *         description: Server error during login
  *         content:
@@ -501,41 +599,6 @@ exports.deleteRegisterUser = async (req, res) => {
  *                   example: Server error
  */
 
-// exports.loginUser = async (req, res) => {
-//   const errors = validationResult(req);
-//   if (!errors.isEmpty()) {
-//     return res.status(400).json({ errors: errors.array() });
-//   }
-
-//   try {
-//     const { userEmail, userPassword } = req.body;
-
-//     const existingUser = await User.findOne({ userEmail });
-//     if (!existingUser) {
-//       return res.status(400).json({ message: "User not found" });
-//     }
-
-//     const isMatch = await bcrypt.compare(
-//       userPassword,
-//       existingUser.userPassword
-//     );
-//     if (!isMatch) {
-//       return res.status(400).json({ message: "Invalid credentials" });
-//     }
-
-//     // Token expire session
-//     const token = jwt.sign(
-//       { userId: existingUser._id },
-//       process.env.JWT_SECRET,
-//       { expiresIn: process.env.JWT_EXPIRE }
-//     );
-//     res
-//       .status(200)
-//       .json({ message: "Login successful", user: existingUser, token });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 exports.loginUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

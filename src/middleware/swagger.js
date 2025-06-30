@@ -7,13 +7,23 @@ const options = {
     info: {
       title: "Social Media",
       version: "1.0.0",
-      description: "API documentation for your Node.js project",
+      description: "Social Media project API Documentation",
     },
     servers: [
       {
+        // url: "https://talksy-xzl6.onrender.com",
         url: "http://localhost:5000",
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
   },
   apis: [
     "./src/controllers/authController.js",

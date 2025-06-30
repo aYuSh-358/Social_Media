@@ -8,9 +8,11 @@ const friendRequest = require("../models/requestModel");
  * /story/addStory/{id}:
  *   post:
  *     summary: Add a new story
- *     description: Uploads a story (image or video) for a user with optional permission and status flags.
+ *     description: Uploads a story (image or video) for a user with optional permissions and status flags.
  *     tags:
  *       - Stories
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -31,31 +33,57 @@ const friendRequest = require("../models/requestModel");
  *               story:
  *                 type: string
  *                 format: binary
- *               permission:
+ *               permissions:
  *                 type: string
- *                 example: public
+ *                 enum: ["0", "1", "2"]
+ *                 example: "2"
+ *                 description: '0: private, 1: friends, 2: public'
  *               status:
  *                 type: string
- *                 example: active
+ *                 enum: ["0", "1"]
+ *                 example: "1"
+ *                 description: '0: inactive, 1: active'
  *     responses:
  *       200:
  *         description: Story added successfully
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               message: Story Added successfully
- *       500:
- *         description: User not found or internal server error
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "200"
+ *                 message:
+ *                   type: string
+ *                   example: Story Added successfully
+ *       404:
+ *         description: User not found
  *         content:
  *           application/json:
- *             examples:
- *               UserNotFound:
- *                 value:
- *                   Status: "500"
- *                   message: User not found
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "404"
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
  */
-
 module.exports.addStory = async (req, res) => {
   try {
     const story = req.file.filename;
@@ -91,6 +119,8 @@ module.exports.addStory = async (req, res) => {
  *     description: Retrieves all active stories of the user's friends based on accepted friend requests.
  *     tags:
  *       - Stories
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -104,30 +134,59 @@ module.exports.addStory = async (req, res) => {
  *         description: Successfully fetched the stories
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               message: "All Stories"
- *               data:
- *                 - user:
- *                     userName: "John Doe"
- *                   storyId: "60f5a3f3a7f9d50015c2e123"
- *                   story: "http://localhost:5000/uploads/story/60dbf9d3d1fd5c0015f6b2e0/story.jpg"
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             example:
- *               Status: "500"
- *               message: "Internal Server Error"
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "200"
+ *                 message:
+ *                   type: string
+ *                   example: All Stories
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           userName:
+ *                             type: string
+ *                             example: John Doe
+ *                       storyId:
+ *                         type: string
+ *                         example: 60f5a3f3a7f9d50015c2e123
+ *                       story:
+ *                         type: string
+ *                         example: http://localhost:5000/uploads/story/60dbf9d3d1fd5c0015f6b2e0/story.jpg
  *       404:
  *         description: No active stories found for friends
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               message: "No active stories found for your friends."
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "404"
+ *                 message:
+ *                   type: string
+ *                   example: No active stories found for your friends.
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
  */
-
 module.exports.getStoriesForUser = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -205,6 +264,8 @@ module.exports.getStoriesForUser = async (req, res) => {
  *     description: Fetches all stories created by a specific user (archives).
  *     tags:
  *       - Stories
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -218,24 +279,56 @@ module.exports.getStoriesForUser = async (req, res) => {
  *         description: User stories retrieved successfully
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               mesage: "All user Stories"
- *               data:
- *                 - _id: "60f5a3f3a7f9d50015c2e123"
- *                   userId: "60dbf9d3d1fd5c0015f6b2e0"
- *                   story: "story.jpg"
- *       500:
- *         description: No stories exist or server error
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "200"
+ *                 message:
+ *                   type: string
+ *                   example: All user Stories
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: 60f5a3f3a7f9d50015c2e123
+ *                       userId:
+ *                         type: string
+ *                         example: 60dbf9d3d1fd5c0015f6b2e0
+ *                       story:
+ *                         type: string
+ *                         example: story.jpg
+ *       404:
+ *         description: No stories exist
  *         content:
  *           application/json:
- *             example:
- *               Status: "500"
- *               message:
- *                 Status: "500"
- *                 message: "No story exist"
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "404"
+ *                 message:
+ *                   type: string
+ *                   example: No story exist
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
  */
-
 module.exports.archiveStory = async (req, res) => {
   const userId = req.params.id;
   try {
@@ -272,6 +365,8 @@ module.exports.archiveStory = async (req, res) => {
  *     description: Tracks that a user has viewed another user's story. Ignores self-views and prevents duplicate entries.
  *     tags:
  *       - Stories
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -293,61 +388,93 @@ module.exports.archiveStory = async (req, res) => {
  *         description: Story viewed successfully
  *         content:
  *           application/json:
- *             example:
- *               Status: "201"
- *               message: View Story
- *       204:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "201"
+ *                 message:
+ *                   type: string
+ *                   example: Story viewed successfully.
+ *       200:
  *         description: Self view or already viewed
  *         content:
  *           application/json:
- *             examples:
- *               SelfView:
- *                 value:
- *                   message: You viewed your own story
- *       400:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: You viewed your own story.
+ *       404:
  *         description: User or Story not found
  *         content:
  *           application/json:
- *             example:
- *               Status: "400"
- *               message: Story not found
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "404"
+ *                 message:
+ *                   type: string
+ *                   example: User not found.
  *       500:
  *         description: Server error
  *         content:
  *           application/json:
- *             example:
- *               Status: "500"
- *               message: {}
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: An unexpected error occurred.
  */
-
 module.exports.viewStory = async (req, res) => {
   try {
     const { userId, storyId } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
-      res.status(400).json({ Status: "400", message: "User not found" });
+      return res
+        .status(404)
+        .json({ status: "404", message: "User not found." });
     }
+
     const story = await Story.findById(storyId);
     if (!story) {
-      res.status(400).json({ Status: "400", message: "Story not found" });
+      return res
+        .status(404)
+        .json({ status: "404", message: "Story not found." });
     }
-    if ((story.userId = userId)) {
-      res.status(204).json({ message: "You viewed your own story" });
+
+    if (story.userId.equals(userId)) {
+      return res.status(200).json({ message: "You viewed your own story." });
     }
-    let alreadyView = story.viewBy.includes(userId);
-    if (alreadyView) {
-      res.status(204);
+
+    const alreadyViewed = story.viewBy.includes(userId);
+    // console.log(alreadyViewed);
+
+    if (alreadyViewed) {
+      return res.status(200).json({ message: "Story already viewed." });
     } else {
       story.viewBy.push(userId);
       await story.save();
+      return res
+        .status(201)
+        .json({ status: "201", message: "Story viewed successfully." });
     }
-    res.status(201).json({ Status: "201", message: "View Story" });
   } catch (error) {
-    res.status(500).json({ Status: "500", message: error });
+    console.error("Error viewing story:", error);
+    return res
+      .status(500)
+      .json({ status: "500", message: "An unexpected error occurred." });
   }
 };
-
 /**
  * @swagger
  * /story/deleteStory/{id}:
@@ -356,6 +483,8 @@ module.exports.viewStory = async (req, res) => {
  *     description: Deletes a story from the system based on user and story IDs.
  *     tags:
  *       - Stories
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -381,23 +510,41 @@ module.exports.viewStory = async (req, res) => {
  *         description: Story deleted successfully
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               message: Story deleted Successfully
- *       400:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "200"
+ *                 message:
+ *                   type: string
+ *                   example: Story deleted Successfully
+ *       404:
  *         description: User not found
  *         content:
  *           application/json:
- *             example:
- *               Status: "400"
- *               message: User not found
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "404"
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  *       500:
  *         description: Server error while deleting story
  *         content:
  *           application/json:
- *             example:
- *               Status: "500"
- *               message: {}
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
  */
 
 module.exports.deleteStory = async (req, res) => {
