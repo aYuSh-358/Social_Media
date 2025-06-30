@@ -244,7 +244,7 @@ module.exports.getPosts = async (req, res) => {
         .json({ Status: "200", message: "User posts", data: data });
     } else {
       // if (!user) {
-      const permission = "1";
+      const permission = "0";
       const posts = await Post.aggregate([
         {
           $match: {
@@ -271,6 +271,7 @@ module.exports.getPosts = async (req, res) => {
           comments: post.comments || "",
           likes: post.likeBy || "",
           user: post.user.userName,
+          event: post.Event || "",
           userProfile:
             `http://localhost:5000/uploads/DP/${post.user.userProfilePhoto}` ||
             "",
