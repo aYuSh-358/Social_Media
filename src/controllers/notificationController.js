@@ -21,21 +21,52 @@ const Notification = require("../models/notificationModels");
  *         description: List of notifications
  *         content:
  *           application/json:
- *             example:
- *               - _id: "6671eac418a3d2a5f4e3c9f7"
- *                 userId: "60dbf9d3d1fd5c0015f6b2e0"
- *                 senderId: "60f5a3f3a7f9d50015c2e123"
- *                 type: "comment"
- *                 message: "Alice commented on your post"
- *                 createdAt: "2024-06-24T12:00:00.000Z"
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     example: 6671eac418a3d2a5f4e3c9f7
+ *                   userId:
+ *                     type: string
+ *                     example: 60dbf9d3d1fd5c0015f6b2e0
+ *                   senderId:
+ *                     type: string
+ *                     example: 60f5a3f3a7f9d50015c2e123
+ *                   type:
+ *                     type: string
+ *                     enum: [follow-request, follow-accepted, like, comment]
+ *                     example: comment
+ *                   postId:
+ *                     type: string
+ *                     example: 60e325b7c45b4b0015d0637f
+ *                   seen:
+ *                     type: boolean
+ *                     example: false
+ *                   message:
+ *                     type: string
+ *                     example: Alice commented on your post
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2024-06-24T12:00:00.000Z
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2024-06-24T12:00:00.000Z
  *       500:
  *         description: Failed to fetch notifications
  *         content:
  *           application/json:
- *             example:
- *               message: Failed to fetch notifications
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to fetch notifications
  */
-
 exports.getUserNotifications = async (req, res) => {
   try {
     const userId = req.params.id;

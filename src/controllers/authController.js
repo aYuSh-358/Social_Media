@@ -6,6 +6,39 @@ const mongoose = require("mongoose");
 const { sendEmail } = require("./sendEmailController");
 require("dotenv").config();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: 60dbf9d3d1fd5c0015f6b2e0
+ *         userName:
+ *           type: string
+ *           example: John Doe
+ *         userEmail:
+ *           type: string
+ *           example: johndoe@example.com
+ *         userPassword:
+ *           type: string
+ *           example: hashedpassword123
+ *         userDOB:
+ *           type: string
+ *           example: 1990-01-01
+ *         userMobileNo:
+ *           type: string
+ *           example: "9876543210"
+ *         userAddress:
+ *           type: string
+ *           example: 123, Baker Street, London
+ *         userProfilePhoto:
+ *           type: string
+ *           example: https://example.com/photo.jpg
+ */
+
 //Register API
 /**
  * @swagger
@@ -520,11 +553,40 @@ exports.deleteRegisterUser = async (req, res) => {
  *                   type: string
  *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *                 user:
- *                   $ref: '#/components/schemas/User'
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 60dbf9d3d1fd5c0015f6b2e0
+ *                     userName:
+ *                       type: string
+ *                       example: John Doe
+ *                     userEmail:
+ *                       type: string
+ *                       example: johndoe@example.com
+ *                     userProfilePhoto:
+ *                       type: string
+ *                       example: https://example.com/photo.jpg
  *       400:
  *         description: Invalid credentials or user not found
  *         content:
  *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *       401:
+ *         description: Unauthorized - Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid credentials
  *       500:
  *         description: Server error during login
  *         content:

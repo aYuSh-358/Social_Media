@@ -13,6 +13,8 @@ const fs = require("fs");
  *     description: Create a post for a specific user. Supports optional file upload (e.g., image/video) and metadata like caption and event.
  *     tags:
  *       - Posts
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -27,16 +29,16 @@ const fs = require("fs");
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required:
- *               - permission
  *             properties:
  *               permission:
  *                 type: string
- *                 example: public
+ *                 enum: ["0", "1", "2"]
+ *                 example: "2"
+ *                 description: '0: private, 1: friends, 2: public'
  *               caption:
  *                 type: string
  *                 example: Beautiful sunset!
- *               Event:
+ *               event:
  *                 type: string
  *                 example: Graduation
  *               post:
@@ -60,6 +62,15 @@ const fs = require("fs");
  *         description: Missing userId or permission
  *         content:
  *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "400"
+ *                 message:
+ *                   type: string
+ *                   example: userId, Permission is missing
  *       500:
  *         description: Server error while creating post
  *         content:
@@ -129,6 +140,8 @@ module.exports.createPost = async (req, res) => {
  *       - If not provided, returns all public posts (`permission: "1"`).
  *     tags:
  *       - Posts
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: false
  *       content:
@@ -159,7 +172,7 @@ module.exports.createPost = async (req, res) => {
  *                   items:
  *                     type: object
  *                     properties:
- *                       id:
+ *                       postId:
  *                         type: string
  *                         example: 60e325b7c45b4b0015d0637f
  *                       post:
@@ -207,7 +220,6 @@ module.exports.createPost = async (req, res) => {
  *                   type: string
  *                   example: Fail to fetch the post data
  */
-
 module.exports.getPosts = async (req, res) => {
   try {
     const user = req.body;
@@ -370,6 +382,8 @@ module.exports.getPosts = async (req, res) => {
  *     description: Updates an existing post with a new file and/or permission. Validates the user and deletes the old file if replaced.
  *     tags:
  *       - Posts
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -389,7 +403,9 @@ module.exports.getPosts = async (req, res) => {
  *                 example: 60dbf9d3d1fd5c0015f6b2e0
  *               permission:
  *                 type: string
- *                 example: private
+ *                 enum: ["0", "1", "2"]
+ *                 example: "2"
+ *                 description: '0: private, 1: friends, 2: public'
  *               post:
  *                 type: string
  *                 format: binary
@@ -398,25 +414,42 @@ module.exports.getPosts = async (req, res) => {
  *         description: Post updated successfully
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               message: Post updated successfully
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "200"
+ *                 message:
+ *                   type: string
+ *                   example: Post updated successfully
  *       400:
  *         description: User not found or unauthorized
  *         content:
  *           application/json:
- *             example:
- *               Status: "400"
- *               message: Your are not the authenticated User
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "400"
+ *                 message:
+ *                   type: string
+ *                   example: You are not the authenticated User
  *       500:
  *         description: Failed to update the post
  *         content:
  *           application/json:
- *             example:
- *               Status: "500"
- *               message: Faild to update the post
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: Failed to update the post
  */
-
 module.exports.updatePost = async (req, res) => {
   try {
     const { postId, userId } = req.body;
@@ -467,11 +500,13 @@ module.exports.updatePost = async (req, res) => {
 /**
  * @swagger
  * /post/likePosts/{id}:
- *   put:
+ *   post:
  *     summary: Like or unlike a post
  *     description: Toggles like on a post by a specific user. If the user already liked the post, the like is removed.
  *     tags:
  *       - Posts
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -497,25 +532,42 @@ module.exports.updatePost = async (req, res) => {
  *         description: Like added to the post successfully
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               message: Like added to the post successfully
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "200"
+ *                 message:
+ *                   type: string
+ *                   example: Like added to the post successfully
  *       400:
  *         description: User or post not found, or like removed
  *         content:
  *           application/json:
- *             example:
- *               Status: "400"
- *               message: User like removed from the post
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "400"
+ *                 message:
+ *                   type: string
+ *                   example: User like removed from the post
  *       500:
  *         description: Error while updating likes
  *         content:
  *           application/json:
- *             example:
- *               Status: "500"
- *               message: Error while updating likes
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: Error while updating likes
  */
-
 module.exports.likePosts = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -572,6 +624,8 @@ module.exports.likePosts = async (req, res) => {
  *     description: Adds a comment to a specific post from a user and triggers a notification to the post owner.
  *     tags:
  *       - Posts
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -601,25 +655,42 @@ module.exports.likePosts = async (req, res) => {
  *         description: Comment added successfully
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               message: Comment added successfully
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "200"
+ *                 message:
+ *                   type: string
+ *                   example: Comment added successfully
  *       400:
  *         description: Missing fields or user/post not found
  *         content:
  *           application/json:
- *             example:
- *               Status: "400"
- *               message: All fields are require
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "400"
+ *                 message:
+ *                   type: string
+ *                   example: All fields are required
  *       500:
  *         description: Server error while adding comment
  *         content:
  *           application/json:
- *             example:
- *               Status: "500"
- *               message: Fail to add comment
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: Fail to add comment
  */
-
 module.exports.addComment = async (req, res) => {
   try {
     // console.log(req.params.id);
@@ -675,6 +746,8 @@ module.exports.addComment = async (req, res) => {
  *     description: Deletes a post if the user is authenticated and owns the post.
  *     tags:
  *       - Posts
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -696,35 +769,42 @@ module.exports.addComment = async (req, res) => {
  *         description: Post deleted successfully
  *         content:
  *           application/json:
- *             example:
- *               Status: "200"
- *               messgae: Post deleted successfully
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "200"
+ *                 message:
+ *                   type: string
+ *                   example: Post deleted successfully
  *       400:
  *         description: User not found
  *         content:
  *           application/json:
- *             example:
- *               Status: "400"
- *               message: User not found
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "400"
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  *       500:
  *         description: Post not found or unauthorized
  *         content:
  *           application/json:
- *             examples:
- *               NotFound:
- *                 value:
- *                   Status: "500"
- *                   message: post no found
- *               Unauthorized:
- *                 value:
- *                   Status: "500"
- *                   message: You and not the authenticated user
- *               ServerError:
- *                 value:
- *                   Status: "500"
- *                   message: {}
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                   example: "500"
+ *                 message:
+ *                   type: string
+ *                   example: post not found
  */
-
 module.exports.deletePost = async (req, res) => {
   try {
     const { postId, userId } = req.body;
