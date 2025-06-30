@@ -235,6 +235,8 @@ module.exports.getPosts = async (req, res) => {
           post: `http://localhost:5000/uploads/posts/${post.post}`,
           comments: post.comments || "",
           likes: post.likeBy || "",
+          userProfile:
+            `http://localhost:5000/uploads/DP/${post.userProfilePhoto}` || "",
         });
       });
       res
@@ -263,12 +265,15 @@ module.exports.getPosts = async (req, res) => {
       const data = [];
       posts.map((post) => {
         data.push({
+          postId: post._id,
           post: `http://localhost:5000/uploads/posts/${post.post}`,
           userId: post.userId,
           comments: post.comments || "",
           likes: post.likeBy || "",
           user: post.user.userName,
-          userProfile: post.user.userProfilePhoto || "",
+          userProfile:
+            `http://localhost:5000/uploads/DP/${post.user.userProfilePhoto}` ||
+            "",
         });
       });
       res.status(200).json({ Status: "200", data });
