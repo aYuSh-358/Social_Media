@@ -554,7 +554,7 @@ exports.loginUser = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: existingUser._id },
+      { userId: existingUser._id, userName: existingUser.userName },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRE }
     );
