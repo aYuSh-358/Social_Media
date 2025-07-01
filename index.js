@@ -16,6 +16,7 @@ const Block = require("./src/models/blockModel");
 const notificationRoute = require("./src/routes/notificationRoute");
 const groupRoutes = require("./src/routes/groupChatRoutes")
 const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -113,6 +114,52 @@ io.on("connection", async (socket) => {
         });
       });
     }
+  });
+
+  //attachment
+  socket.on("privateFile", async (data, callback) => {
+    const { senderId, receiverId, filename, filetype, data: fileBuffer } = data;
+
+    const uploadDir = path.join(__dirname, "uploads", "chat_files");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const uniqueName = `${filename}`;
+    const filePath = path.join(uploadDir, uniqueName);
+
+    fs.writeFile(filePath, Buffer.from(fileBuffer), async (err) => {
+      if (err) {
+        console.error("File write error:", err);
+        callback({ status: "failure", error: err.message });
+        return;
+      }
+
+      const fileUrl = `/uploads/chat_files/${uniqueName}`;
+
+      // Save message with attachment
+      const chat = new Chat({
+        senderId,
+        receiverId,
+        message: "",
+        attachments: [fileUrl],
+      });
+      await chat.save();
+
+      const receiverSockets = activeConnection.get(receiverId);
+      if (receiverSockets) {
+        receiverSockets.forEach((socketId) => {
+          io.to(socketId).emit("receivePrivateMessage", {
+            senderId,
+            receiverId,
+            message: `Sent a file: <a href="${fileUrl}" target="_blank">${filename}</a>`,
+            attachments: [fileUrl],
+          });
+        });
+      }
+
+      callback({ status: "success", fileUrl });
+    });
   });
 
   socket.on("disconnect", () => {
