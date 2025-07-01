@@ -22,5 +22,6 @@ router.put(
   controller.updatePost
 );
 router.delete("/deletePost", verifyToken, controller.deletePost);
+router.delete("/deleteComment", verifyToken, controller.deleteComment);
 
 module.exports = router;
