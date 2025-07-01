@@ -1,5 +1,6 @@
-node_modules/
-uploads/
-view/
+node_modules
+uploads
+view
 src/controllers/sendEmailController.js
 src/controllers/sendEmailController.js
+.env

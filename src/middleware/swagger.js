@@ -11,8 +11,8 @@ const options = {
     },
     servers: [
       {
-        // url: "https://talksy-xzl6.onrender.com",
-        url: "http://localhost:5000",
+        url: "https://talksy-xzl6.onrender.com",
+        // url: "http://localhost:5000",
       },
     ],
     components: {

@@ -1,0 +1,4 @@
+PORT=5000
+MONGO_URI="mongodb+srv://ayushdongre853:wuLu1Ost6iuoAUZn@cluster0.hakt05s.mongodb.net/"
+JWT_SECRET=myStrongSecretKey2802
+JWT_EXPIRE=6h
