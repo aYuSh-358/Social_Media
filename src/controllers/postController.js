@@ -451,53 +451,129 @@ module.exports.getPosts = async (req, res) => {
  *                   type: string
  *                   example: Failed to update the post
  */
+// module.exports.updatePost = async (req, res) => {
+//   try {
+//     const { postId, userId } = req.body;
+//     const permission = req.body.permission;
+//     const caption = req.body.caption;
+//     // console.log(postName, permission, postId);
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       res.status(400).json({ Status: "400", message: "User not found" });
+//     }
+//     const post = await Post.findById(postId);
+//     // console.log(post);
+//     if (!post) {
+//       res
+//         .status(500)
+//         .message({ Status: "500", message: "Update Post Data is missing" });
+//     }
+//     const postName = req.file.filename || "1";
+//     if (post.userId.toString() != userId) {
+//       res.status(400).json({
+//         Status: "400",
+//         message: "Your are not the authenticated User",
+//       });
+//     }
+//     console.log("xgfchvjb");
+//     if (postName == "1") {
+//       console.log("xgfchvjb");
+//       const rmfile = post.post;
+//       if (rmfile) {
+//         fs.unlink(`./uploads/posts/${rmfile}`, (err) => {
+//           if (err) {
+//             console.error(err);
+//             return;
+//           }
+//           console.log("File deleted successfully");
+//         });
+//       }
+//       post.post = postName || "";
+//     }
+//     post.permission = permission || post.permission;
+//     post.caption = caption || post.caption || "";
+//     await post.save();
+//     res
+//       .status(200)
+//       .json({ Status: "200", message: "Post updated successfully" });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({ Status: "500", message: "Faild to update the post" });
+//   }
+// };
+
 module.exports.updatePost = async (req, res) => {
   try {
-    const { postId, userId } = req.body;
-    const postName = req.file.filename;
-    const permission = req.body.permission;
-    // console.log(postName, permission, postId);
+    const { postId, userId, permission, caption } = req.body;
+
+    // Validate required fields
+    if (!postId || !userId) {
+      return res
+        .status(400)
+        .json({ Status: "400", message: "Post ID and User ID are required" });
+    }
+
     const user = await User.findById(userId);
     if (!user) {
-      res.status(400).json({ Status: "400", message: "User not found" });
+      return res.status(400).json({ Status: "400", message: "User not found" });
     }
+
     const post = await Post.findById(postId);
-    // console.log(post);
     if (!post) {
-      res
-        .status(500)
-        .message({ Status: "500", message: "Update Post Data is missing" });
+      return res.status(404).json({ Status: "404", message: "Post not found" });
     }
-    if (post.userId.toString() != userId) {
-      res.status(400).json({
-        Status: "400",
-        message: "Your are not the authenticated User",
-      });
-    }
-    const rmfile = post.post;
-    if (rmfile) {
-      fs.unlink(`./uploads/posts/${rmfile}`, (err) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-        console.log("File deleted successfully");
+
+    // Check if the user is the owner of the post
+    if (post.userId.toString() !== userId) {
+      return res.status(403).json({
+        Status: "403",
+        message: "You are not authorized to update this post",
       });
     }
 
-    post.post = postName;
-    post.permission = permission || post.permission;
+    // Handle file update if a new file was uploaded
+    if (req.file) {
+      const postName = req.file.filename;
+
+      // Delete the old file if it exists
+      if (post.post) {
+        try {
+          await fs.promises.unlink(`./uploads/posts/${post.post}`);
+          console.log("Old file deleted successfully");
+        } catch (err) {
+          console.error("Error deleting old file:", err);
+          // Continue even if deletion fails - we don't want to stop the update
+        }
+      }
+
+      // Update with new file
+      post.post = postName;
+    }
+
+    // Update other fields
+    if (permission !== undefined) {
+      post.permission = permission;
+    }
+    if (caption !== undefined) {
+      post.caption = caption;
+    }
+
     await post.save();
-    res
-      .status(200)
-      .json({ Status: "200", message: "Post updated successfully" });
+    return res.status(200).json({
+      Status: "200",
+      message: "Post updated successfully",
+      data: post,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ Status: "500", message: "Faild to update the post" });
+    console.error("Error updating post:", error);
+    return res.status(500).json({
+      Status: "500",
+      message: "Failed to update the post",
+      error: error.message,
+    });
   }
 };
-
 /**
  * @swagger
  * /post/likePosts/{id}:
