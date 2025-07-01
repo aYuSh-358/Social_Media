@@ -14,6 +14,7 @@ const storyRoute = require("./src/routes/storyRoutes");
 const blockRoutes = require("./src/routes/blockRoutes");
 const Block = require("./src/models/blockModel");
 const notificationRoute = require("./src/routes/notificationRoute");
+const groupRoutes = require("./src/routes/groupChatRoutes")
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
@@ -36,7 +37,7 @@ const activeConnection = new Map();
 io.on("connection", async (socket) => {
   let userIdForThisSocket = null;
 
-  socket.on("registeUser", async (myId) => {
+  socket.on("registerUser", async (myId) => {
     userIdForThisSocket = myId;
     socket.userId = myId;
 
@@ -176,11 +177,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  req.io = io;
-  req.activeConnection = activeConnection;
-  next();
-});
+// app.use((req, res, next) => {
+//   req.io = io;
+//   req.activeConnection = activeConnection;
+//   next();
+// });
 
 // Routes
 app.use("/auth", authRoutes);
@@ -190,6 +191,7 @@ app.use("/chat", chatRouter);
 app.use("/api", requestRoute);
 app.use("/block", blockRoutes);
 app.use("/notification", notificationRoute);
+app.use("/group", groupRoutes);
 
 const updateStoryStatus = async (req, res) => {
   const stories = await Story.find();
