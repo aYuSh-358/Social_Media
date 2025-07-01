@@ -239,7 +239,7 @@
     });
 
     function initChat() {
-      socket = io("http://localhost:5000");
+      socket = io("https://talksy-xzl6.onrender.com");
       socket.emit("registeUser", myId);
 
       socket.on("receivePrivateMessage", (data) => {
