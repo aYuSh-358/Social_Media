@@ -829,3 +829,46 @@ module.exports.deletePost = async (req, res) => {
     res.status(500).json({ Status: "500", message: error });
   }
 };
+
+module.exports.deleteComment = async (req, res) => {
+  try {
+    const { userId, postId, commentId } = req.body;
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res
+        .status(404)
+        .json({ Status: "404", message: "Post not found." });
+    }
+
+    const commentToDelete = post.comments.id(commentId);
+    if (!commentToDelete) {
+      return res
+        .status(404)
+        .json({ Status: "404", message: "Comment not found in this post." });
+    }
+
+    const commentOwnerId = commentToDelete.userId.toString();
+    const postOwnerId = post.userId.toString();
+    const requesterId = userId.toString();
+
+    if (requesterId !== commentOwnerId && requesterId !== postOwnerId) {
+      return res.status(403).json({
+        Status: "403",
+        message: "You are not authorized to delete this comment.",
+      });
+    }
+    post.comments.pull({ _id: commentId });
+    await post.save();
+
+    res
+      .status(200)
+      .json({ Status: "200", message: "Comment deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    res.status(500).json({
+      Status: "500",
+      message: "An internal server error occurred.",
+      error: error.message,
+    });
+  }
+};
