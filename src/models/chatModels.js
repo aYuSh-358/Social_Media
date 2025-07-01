@@ -3,23 +3,30 @@ const mongoose = require("mongoose");
 const chatSchema = new mongoose.Schema(
   {
     senderId: {
-      // type: mongoose.Schema.Types.ObjectId,
-      // ref: "User",
       type: String,
-      require: true,
+      required: true,
     },
     receiverId: {
-      // type: mongoose.Schema.Types.ObjectId,
-      // ref: "User",
       type: String,
-      require: true,
+      required: true,
     },
     message: {
       type: String,
-      require: true,
+      default: "",
+    },
+    attachments: [
+      {
+        type: String,
+      },
+    ],
+    sentAt: {
+      type: Date,
+      default: Date.now,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 module.exports = mongoose.model("Chat", chatSchema);
