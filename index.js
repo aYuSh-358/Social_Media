@@ -40,7 +40,7 @@ io.on("connection", async (socket) => {
 
   socket.on("registerUser", async (myId) => {
     userIdForThisSocket = myId;
-    console.log(userIdForThisSocket);
+    // console.log(userIdForThisSocket);
 
     socket.userId = myId;
     let userSockets = activeConnection.get(myId);
@@ -50,8 +50,8 @@ io.on("connection", async (socket) => {
     }
     userSockets.add(socket.id);
 
-    console.log(`User ${myId} registered with socket ${socket.id}`);
-    console.log("Active Connections:", activeConnection);
+    // console.log(`User ${myId} registered with socket ${socket.id}`);
+    // console.log("Active Connections:", activeConnection);
     const friendsOfConnectedUser = await friendRequest.find({
       $or: [{ receiver: myId }, { sender: myId }],
       status: "accepted",
@@ -66,7 +66,7 @@ io.on("connection", async (socket) => {
         activeConnection.has(friendId) &&
         activeConnection.get(friendId).size > 0
     );
-    console.log(onlineFriendIdsForNewUser);
+    // console.log(onlineFriendIdsForNewUser);
 
     socket.emit("onlineFriends", onlineFriendIdsForNewUser);
 
@@ -238,9 +238,9 @@ io.on("connection", async (socket) => {
         io.to(socketId).emit("receiveNotification", notification);
       });
     } else {
-      console.log(
-        `User ${userId} is offline. Saving notification in database.`
-      );
+      // console.log(
+      //   `User ${userId} is offline. Saving notification in database.`
+      // );
       await sendNotification({
         userId,
         senderId: notification.senderId,
@@ -250,7 +250,7 @@ io.on("connection", async (socket) => {
         activeConnection,
       });
     }
-    console.log(`Notification sent to user ${userId}:`, notification);
+    // console.log(`Notification sent to user ${userId}:`, notification);
   });
 });
 

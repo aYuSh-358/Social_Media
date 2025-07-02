@@ -1,198 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chat Page</title>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
 
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat Page</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-      header {
-        height: 60px;
-        background-color: #04aa6d;
-        color: white;
-        display: flex;
-        align-items: center;
-        padding: 0 20px;
-        gap: 15px;
-      }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-      header img.avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-      }
+    header {
+      height: 60px;
+      background-color: #04aa6d;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 15px;
+    }
 
-      header span.username {
-        font-weight: bold;
-        font-size: 18px;
-      }
+    header img.avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
 
-      main {
-        flex: 1;
-        display: flex;
-        background: #f0f0f0;
-      }
+    header span.username {
+      font-weight: bold;
+      font-size: 18px;
+    }
 
-      .chat-container {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        border-right: 1px solid #ddd;
-      }
+    main {
+      flex: 1;
+      display: flex;
+      background: #f0f0f0;
+    }
 
-      .messages {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-        background: white;
-      }
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #ddd;
+    }
 
-      .chat-input {
-        display: flex;
-        padding: 10px 20px;
-        background: #eee;
-        border-top: 1px solid #ddd;
-      }
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: white;
+    }
 
-      .chat-input input[type="text"] {
-        flex: 1;
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
+    .chat-input {
+      display: flex;
+      padding: 10px 20px;
+      background: #eee;
+      border-top: 1px solid #ddd;
+    }
 
-      .chat-input input[type="file"] {
-        margin-left: 10px;
-      }
+    .chat-input input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
 
-      .chat-input button {
-        background-color: #04aa6d;
-        border: none;
-        color: white;
-        padding: 10px 20px;
-        margin-left: 10px;
-        border-radius: 4px;
-        cursor: pointer;
-      }
+    .chat-input input[type="file"] {
+      margin-left: 10px;
+    }
 
-      .chat-input button:hover {
-        background-color: #039f5b;
-      }
+    .chat-input button {
+      background-color: #04aa6d;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      margin-left: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
 
-      .friend-list {
-        width: 280px;
-        background: white;
-        border-left: 1px solid #ddd;
-        display: flex;
-        flex-direction: column;
-      }
+    .chat-input button:hover {
+      background-color: #039f5b;
+    }
 
-      .friend-list h1 {
-        margin: 15px;
-        font-size: 25px;
-        border-bottom: 1px solid #2dc735;
-        padding-bottom: 5px;
-        color: #04aa6d;
-      }
+    .friend-list {
+      width: 280px;
+      background: white;
+      border-left: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+    }
 
-      .friends {
-        flex: 1;
-        overflow-y: auto;
-        padding: 0 15px 15px 15px;
-      }
+    .friend-list h1 {
+      margin: 15px;
+      font-size: 25px;
+      border-bottom: 1px solid #2dc735;
+      padding-bottom: 5px;
+      color: #04aa6d;
+    }
 
-      .friend {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 8px 5px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
+    .friends {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 15px 15px 15px;
+    }
 
-      .friend:hover {
-        background-color: #f5f5f5;
-      }
+    .friend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
 
-      .friend img {
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-      }
+    .friend:hover {
+      background-color: #f5f5f5;
+    }
 
-      .friend .name {
-        flex: 1;
-      }
+    .friend img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+    }
 
-      .status {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        margin-right: 5px; /* Added for spacing */
-      }
+    .friend .name {
+      flex: 1;
+    }
 
-      .online {
-        background-color: #4caf50;
-      }
+    .status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 5px;
+      /* Added for spacing */
+    }
 
-      .offline {
-        background-color: #bbb;
-      }
-    </style>
-  </head>
+    .online {
+      background-color: #4caf50;
+    }
 
-  <body>
-    <header>
-      <img class="avatar" id="userPhoto" src="" alt="Profile Photo" />
-      <span class="username" id="userNameDisplay"></span>
-    </header>
+    .offline {
+      background-color: #bbb;
+    }
+  </style>
+</head>
 
-    <main>
-      <div class="chat-container">
-        <div id="chatWith" style="padding: 10px; background: #ddd"></div>
-        <div class="messages" id="messages"></div>
-        <form class="chat-input" id="chatForm" style="align-items: center">
-          <input
-            type="text"
-            id="messageInput"
-            placeholder="Type your message..."
-            autocomplete="off"
-            required
-            style="
+<body>
+  <header>
+    <img class="avatar" id="userPhoto" src="" alt="Profile Photo" />
+    <span class="username" id="userNameDisplay"></span>
+  </header>
+
+  <main>
+    <div class="chat-container">
+      <div id="chatWith" style="padding: 10px; background: #ddd"></div>
+      <div class="messages" id="messages"></div>
+      <form class="chat-input" id="chatForm" style="align-items: center">
+        <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off" required style="
               flex: 1;
               padding: 12px 16px;
               font-size: 16px;
               border-radius: 20px;
               border: 1px solid #ccc;
               outline: none;
-            "
-          />
+            " />
 
-          <input
-            type="file"
-            id="fileInput"
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-            style="display: none"
-          />
+        <input type="file" id="fileInput" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+          style="display: none" />
 
-          <label
-            for="fileInput"
-            title="Attach file"
-            style="
+        <label for="fileInput" title="Attach file" style="
               cursor: pointer;
               margin-left: 12px;
               display: flex;
@@ -203,28 +191,15 @@
               background: #04aa6d;
               border-radius: 50%;
               transition: background 0.3s;
-            "
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              stroke="white"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              viewBox="0 0 24 24"
-              width="20"
-              height="20"
-            >
-              <path
-                d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.2-9.19a3 3 0 014.24 4.24l-9.2 9.2a1 1 0 01-1.42-1.42l8.48-8.48"
-              />
-            </svg>
-          </label>
+            ">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24" width="20" height="20">
+            <path
+              d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.2-9.19a3 3 0 014.24 4.24l-9.2 9.2a1 1 0 01-1.42-1.42l8.48-8.48" />
+          </svg>
+        </label>
 
-          <button
-            type="submit"
-            style="
+        <button type="submit" style="
               background: #04aa6d;
               border: none;
               margin-left: 12px;
@@ -236,268 +211,262 @@
               align-items: center;
               justify-content: center;
               transition: background 0.3s;
-            "
-            title="Send message"
-          >
-            <img
-              src="https://cdn-icons-png.flaticon.com/128/8135/8135537.png"
-              alt="send"
-              width="20"
-              height="20"
-            />
-          </button>
-        </form>
-      </div>
+            " title="Send message">
+          <img src="https://cdn-icons-png.flaticon.com/128/8135/8135537.png" alt="send" width="20" height="20" />
+        </button>
+      </form>
+    </div>
 
-      <aside class="friend-list">
-        <h1>Friend list</h1>
-        <div class="friends" id="userList"></div>
-      </aside>
-    </main>
+    <aside class="friend-list">
+      <h1>Friend list</h1>
+      <div class="friends" id="userList"></div>
+    </aside>
+  </main>
 
-    <script>
-      let socket;
-      let myId = localStorage.getItem("userId");
-      let username = localStorage.getItem("name");
-      let userPhoto = localStorage.getItem("userProfilePhoto");
-      let selectedUser = null;
-      let allFriends = [];
-      let onlineFriendIds = [];
+  <script>
+    let socket;
+    let myId = localStorage.getItem("userId");
+    let username = localStorage.getItem("name");
+    let userPhoto = localStorage.getItem("userProfilePhoto");
+    let selectedUser = null;
+    let allFriends = [];
+    let onlineFriendIds = [];
 
-      document.getElementById("userNameDisplay").textContent =
-        username || "User";
-      if (userPhoto) {
-        document.getElementById("userPhoto").src = `/uploads/DP/${userPhoto}`;
-      } else {
-        document.getElementById("userPhoto").src =
-          "https://via.placeholder.com/40";
-      }
+    document.getElementById("userNameDisplay").textContent =
+      username || "User";
+    if (userPhoto) {
+      document.getElementById("userPhoto").src = `/uploads/DP/${userPhoto}`;
+    } else {
+      document.getElementById("userPhoto").src =
+        "https://via.placeholder.com/40";
+    }
 
-      const chatForm = document.getElementById("chatForm");
-      const messages = document.getElementById("messages");
-      const messageInput = document.getElementById("messageInput");
+    const chatForm = document.getElementById("chatForm");
+    const messages = document.getElementById("messages");
+    const messageInput = document.getElementById("messageInput");
 
-      chatForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const message = messageInput.value.trim();
-        if (!message || !selectedUser) return;
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const message = messageInput.value.trim();
+      if (!message || !selectedUser) return;
 
-        socket.emit("privateMessage", {
-          senderId: myId,
-          receiverId: selectedUser._id,
-          message: message,
-        });
-
-        addMessage(`You: ${message}`);
-        messageInput.value = "";
-        messages.scrollTop = messages.scrollHeight;
+      socket.emit("privateMessage", {
+        senderId: myId,
+        receiverId: selectedUser._id,
+        message: message,
       });
 
-      function initChat() {
-        socket = io("https://talksy-xzl6.onrender.com");
-        // socket = io("http://localhost:5000");
-        socket.emit("registerUser", myId);
-        console.log("g", myId);
+      addMessage(`You: ${message}`);
+      messageInput.value = "";
+      messages.scrollTop = messages.scrollHeight;
+    });
 
-        socket.on("receivePrivateMessage", (data) => {
-          console.log("Received private message:", data);
+    function initChat() {
+      socket = io("https://talksy-xzl6.onrender.com");
+      // socket = io("http://localhost:5000");
+      socket.emit("registerUser", myId);
+      // console.log("g", myId);
 
-          const isCurrentChat =
-            selectedUser &&
-            ((data.senderId === selectedUser._id && data.receiverId === myId) ||
-              (data.senderId === myId && data.receiverId === selectedUser._id));
+      socket.on("receivePrivateMessage", (data) => {
+        // console.log("Received private message:", data);
 
-          if (isCurrentChat) {
-            const sender =
-              data.senderId === myId ? "You" : selectedUser.userName;
-            let messageContent = data.message;
+        const isCurrentChat =
+          selectedUser &&
+          ((data.senderId === selectedUser._id && data.receiverId === myId) ||
+            (data.senderId === myId && data.receiverId === selectedUser._id));
 
-            if (data.attachments && data.attachments.length > 0) {
-              const fileName = messageContent.substring(
-                messageContent.indexOf(":") + 2
-              );
-              messageContent = `${sender} sent a file: <a href="${data.attachments[0]}" target="_blank">${fileName}</a>`;
-              addMessage(messageContent, true);
-            } else {
-              addMessage(`${sender}: ${messageContent}`);
-            }
+        if (isCurrentChat) {
+          const sender =
+            data.senderId === myId ? "You" : selectedUser.userName;
+          let messageContent = data.message;
+
+          if (data.attachments && data.attachments.length > 0) {
+            const fileName = messageContent.substring(
+              messageContent.indexOf(":") + 2
+            );
+            messageContent = `${sender} sent a file: <a href="${data.attachments[0]}" target="_blank">${fileName}</a>`;
+            addMessage(messageContent, true);
+          } else {
+            addMessage(`${sender}: ${messageContent}`);
           }
-        });
-
-        socket.on("onlineFriends", (updatedOnlineFriendIds) => {
-          onlineFriendIds = updatedOnlineFriendIds;
-          console.log("Updated online friends:", onlineFriendIds);
-          loadAllFriendsAndRenderList();
-        });
-
-        socket.on("messageBlocked", (data) => {
-          if (selectedUser && selectedUser._id === data.receiverId) {
-            addMessage("Your message was blocked by this user.");
-          }
-        });
-
-        loadAllFriendsAndRenderList();
-      }
-
-      async function loadAllFriendsAndRenderList() {
-        const usersRes = await fetch(
-          `https://talksy-xzl6.onrender.com/auth/getAllRegisterUsers`
-        );
-        const users = await usersRes.json();
-        const allRegisteredUsers = users.filter((u) => u._id !== myId);
-
-        const friendsRes = await fetch(
-          `https://talksy-xzl6.onrender.com/api/friendList/${myId}`
-        );
-        console.log("Value of friends before map:", friendsRes);
-        const acceptedFriends = await friendsRes.json();
-        // console.log("Value of friends before map:", acceptedFriends.friends);
-        allFriends = acceptedFriends.friends;
-
-        // const acceptedFriendIds = acceptedFriends.friends.map((f) =>
-        //   f.sender._id === myId ? f.receiver._id : f.sender._id
-        // );
-
-        // // Filter all registered users to get only accepted friends
-        // allFriends = allRegisteredUsers.filter((user) =>
-        //   acceptedFriendIds.includes(user._id)
-        // );
-        console.log(allFriends);
-
-        renderUserList();
-      }
-
-      function renderUserList() {
-        const userListDiv = document.getElementById("userList");
-        userListDiv.innerHTML = "";
-
-        if (allFriends.length > 0) {
-          allFriends.forEach((user) => {
-            const isOnline = onlineFriendIds.includes(user._id);
-            const div = document.createElement("div");
-            div.className = "friend";
-            console.log("user", user);
-            div.onclick = () => selectUser(user);
-
-            const img = document.createElement("img");
-            img.src = user.userProfilePhoto
-              ? `/uploads/DP/${user.userProfilePhoto}`
-              : "https://via.placeholder.com/40";
-            img.alt = "Profile Photo";
-
-            const nameSpan = document.createElement("span");
-            nameSpan.className = "name";
-            nameSpan.textContent = user.userName;
-
-            const statusSpan = document.createElement("span");
-            statusSpan.className = `status ${isOnline ? "online" : "offline"}`;
-            statusSpan.title = isOnline ? "Online" : "Offline";
-
-            div.appendChild(img);
-            div.appendChild(nameSpan);
-            div.appendChild(statusSpan);
-            userListDiv.appendChild(div);
-          });
-        } else {
-          userListDiv.innerHTML = "<p>No friends found.</p>";
         }
+      });
+
+      socket.on("onlineFriends", (updatedOnlineFriendIds) => {
+        onlineFriendIds = updatedOnlineFriendIds;
+        // console.log("Updated online friends:", onlineFriendIds);
+        loadAllFriendsAndRenderList();
+      });
+
+      socket.on("messageBlocked", (data) => {
+        if (selectedUser && selectedUser._id === data.receiverId) {
+          addMessage("Your message was blocked by this user.");
+        }
+      });
+
+      loadAllFriendsAndRenderList();
+    }
+
+    async function loadAllFriendsAndRenderList() {
+      const usersRes = await fetch(
+        `https://talksy-xzl6.onrender.com/auth/getAllRegisterUsers`
+      );
+      const users = await usersRes.json();
+      const allRegisteredUsers = users.filter((u) => u._id !== myId);
+
+      const friendsRes = await fetch(
+        `https://talksy-xzl6.onrender.com/api/friendList/${myId}`
+      );
+      // console.log("Value of friends before map:", friendsRes);
+      const acceptedFriends = await friendsRes.json();
+      // console.log("Value of friends before map:", acceptedFriends.friends);
+      allFriends = acceptedFriends.friends;
+
+      // const acceptedFriendIds = acceptedFriends.friends.map((f) =>
+      //   f.sender._id === myId ? f.receiver._id : f.sender._id
+      // );
+
+      // // Filter all registered users to get only accepted friends
+      // allFriends = allRegisteredUsers.filter((user) =>
+      //   acceptedFriendIds.includes(user._id)
+      // );
+      // console.log(allFriends);
+
+      renderUserList();
+    }
+
+    function renderUserList() {
+      const userListDiv = document.getElementById("userList");
+      userListDiv.innerHTML = "";
+
+      if (allFriends.length > 0) {
+        allFriends.forEach((user) => {
+          const isOnline = onlineFriendIds.includes(user._id);
+          const div = document.createElement("div");
+          div.className = "friend";
+          // console.log("user", user);
+          div.onclick = () => selectUser(user);
+
+          const img = document.createElement("img");
+          img.src = user.userProfilePhoto
+            ? `/uploads/DP/${user.userProfilePhoto}`
+            : "https://via.placeholder.com/40";
+          img.alt = "Profile Photo";
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "name";
+          nameSpan.textContent = user.userName;
+
+          const statusSpan = document.createElement("span");
+          statusSpan.className = `status ${isOnline ? "online" : "offline"}`;
+          statusSpan.title = isOnline ? "Online" : "Offline";
+
+          div.appendChild(img);
+          div.appendChild(nameSpan);
+          div.appendChild(statusSpan);
+          userListDiv.appendChild(div);
+        });
+      } else {
+        userListDiv.innerHTML = "<p>No friends found.</p>";
       }
+    }
 
-      async function selectUser(user) {
-        selectedUser = user;
-        document.getElementById(
-          "chatWith"
-        ).innerText = `Chat with: ${user.userName}`;
-        messages.innerHTML = "";
+    async function selectUser(user) {
+      selectedUser = user;
+      document.getElementById(
+        "chatWith"
+      ).innerText = `Chat with: ${user.userName}`;
+      messages.innerHTML = "";
 
-        try {
-          const res = await fetch(
-            `http://localhost:5000/chat/userchat/${myId}/${user._id}`
-          );
-          console.log(res);
+      try {
+        const res = await fetch(
+          `http://localhost:5000/chat/userchat/${myId}/${user._id}`
+        );
+        // console.log(res);
 
-          const response = await res.json();
-          const msgs = response.data || [];
-          msgs.forEach((msg) => {
-            const sender = msg.senderId === myId ? "You" : user.userName;
-            if (msg.attachments && msg.attachments.length > 0) {
-              const fileName = msg.message.substring(
-                msg.message.indexOf(":") + 2
-              );
+        const response = await res.json();
+        const msgs = response.data || [];
+        msgs.forEach((msg) => {
+          const sender = msg.senderId === myId ? "You" : user.userName;
+          if (msg.attachments && msg.attachments.length > 0) {
+            const fileName = msg.message.substring(
+              msg.message.indexOf(":") + 2
+            );
+            addMessage(
+              `${sender} sent a file: <a href="${msg.attachments[0]}" target="_blank">${fileName}</a>`,
+              true
+            );
+          } else {
+            addMessage(`${sender}: ${msg.message}`);
+          }
+        });
+        messages.scrollTop = messages.scrollHeight;
+      } catch (error) {
+        console.error("Error fetching chat history:", error);
+        addMessage("Error loading chat history.");
+      }
+    }
+
+    function addMessage(msg, isHtml = false) {
+      const div = document.createElement("p");
+      if (isHtml) {
+        div.innerHTML = msg;
+      } else {
+        div.textContent = msg;
+      }
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    document
+      .getElementById("fileInput")
+      .addEventListener("change", function () {
+        const file = this.files[0];
+        if (file && selectedUser) {
+          uploadFile(file);
+        }
+      });
+
+    function uploadFile(file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const arrayBuffer = event.target.result;
+
+        socket.emit(
+          "privateFile",
+          {
+            senderId: myId,
+            receiverId: selectedUser._id,
+            filename: file.name,
+            filetype: file.type,
+            data: arrayBuffer,
+          },
+          (response) => {
+            if (response.status === "success") {
               addMessage(
-                `${sender} sent a file: <a href="${msg.attachments[0]}" target="_blank">${fileName}</a>`,
+                `You sent a file: <a href="${response.fileUrl}" target="_blank">${file.name}</a>`,
                 true
               );
             } else {
-              addMessage(`${sender}: ${msg.message}`);
+              console.error("Upload failed:", response.error);
+              addMessage(`File upload failed: ${response.error}`);
             }
-          });
-          messages.scrollTop = messages.scrollHeight;
-        } catch (error) {
-          console.error("Error fetching chat history:", error);
-          addMessage("Error loading chat history.");
-        }
-      }
-
-      function addMessage(msg, isHtml = false) {
-        const div = document.createElement("p");
-        if (isHtml) {
-          div.innerHTML = msg;
-        } else {
-          div.textContent = msg;
-        }
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
-      }
-
-      document
-        .getElementById("fileInput")
-        .addEventListener("change", function () {
-          const file = this.files[0];
-          if (file && selectedUser) {
-            uploadFile(file);
           }
-        });
+        );
 
-      function uploadFile(file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const arrayBuffer = event.target.result;
+        document.getElementById("fileInput").value = "";
+      };
+      reader.readAsArrayBuffer(file);
+    }
 
-          socket.emit(
-            "privateFile",
-            {
-              senderId: myId,
-              receiverId: selectedUser._id,
-              filename: file.name,
-              filetype: file.type,
-              data: arrayBuffer,
-            },
-            (response) => {
-              if (response.status === "success") {
-                addMessage(
-                  `You sent a file: <a href="${response.fileUrl}" target="_blank">${file.name}</a>`,
-                  true
-                );
-              } else {
-                console.error("Upload failed:", response.error);
-                addMessage(`File upload failed: ${response.error}`);
-              }
-            }
-          );
+    if (myId) {
+      initChat();
+      // console.log("initChat called");
+    } else {
+      alert("Please login first.");
+      window.location.href = "/src/public/index.html";
+    }
+  </script>
+</body>
 
-          document.getElementById("fileInput").value = "";
-        };
-        reader.readAsArrayBuffer(file);
-      }
-
-      if (myId) {
-        initChat();
-        // console.log("initChat called");
-      } else {
-        alert("Please login first.");
-        window.location.href = "/src/public/index.html";
-      }
-    </script>
-  </body>
 </html>
