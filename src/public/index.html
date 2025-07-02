@@ -44,10 +44,11 @@
         .imgcontainer {
             text-align: center;
             margin: 24px 0 12px 0;
+            margin-bottom: -30px;
         }
 
         img.logo {
-            width: 15%;
+            width: 30%;
             border-radius: 50%;
         }
 
@@ -74,7 +75,8 @@
 <body>
     <form id="loginForm">
         <div class="imgcontainer">
-            <img src="/chat log.png" alt="logo" class="logo">
+            <img src="https://sdmntprnorthcentralus.oaiusercontent.com/files/00000000-7aa8-622f-910e-99b4d6fe0b5c/raw?se=2025-07-02T13%3A46%3A12Z&sp=r&sv=2024-08-04&sr=b&scid=ba9a98af-b92b-5cdf-9561-b1eba3f5c7a3&skoid=a3412ad4-1a13-47ce-91a5-c07730964f35&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-07-02T11%3A56%3A40Z&ske=2025-07-03T11%3A56%3A40Z&sks=b&skv=2024-08-04&sig=nmSk/uxf8Mc5jye3AJCMOYmGFdlRolW2Ac7mgjaz2rs%3D"
+                alt="logo" class="logo">
         </div>
 
         <div class="container">
@@ -111,7 +113,7 @@
                     })
                 });
 
-                const data = await response.json(); 
+                const data = await response.json();
 
                 if (response.ok) {
                     alert("Login successful!");
