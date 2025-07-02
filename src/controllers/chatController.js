@@ -65,43 +65,43 @@ const { mongoose } = require("mongoose");
  *                   message: Error while fetching messages
  */
 
-module.exports.getMessages = async (req, res) => {
-  try {
-    const { sender_id, receiver_id } = req.params;
-    // console.log(sender_id, receiver_id);
-    const sender = await User.findById(sender_id);
-    if (!sender) {
-      res.status(400).json({ Status: "400", message: "Sender not found" });
-    }
-    const reciver = await User.findById(receiver_id);
-    if (!reciver) {
-      res.Status(400).json({ Status: "400", message: " Reciver not found" });
-    }
+// module.exports.getMessages = async (req, res) => {
+//   try {
+//     const { sender_id, receiver_id } = req.params;
+//     console.log("hiii", sender_id, receiver_id);
+//     const sender = await User.findById(sender_id);
+//     if (!sender) {
+//       res.status(400).json({ Status: "400", message: "Sender not found" });
+//     }
+//     const reciver = await User.findById(receiver_id);
+//     if (!reciver) {
+//       res.Status(400).json({ Status: "400", message: " Reciver not found" });
+//     }
 
-    const message = await Chat.aggregate([
-      {
-        $match: {
-          $or: [{ senderId: sender_id }, { receiverId: sender_id }],
-        },
-      },
-    ]);
+//     const message = await Chat.aggregate([
+//       {
+//         $match: {
+//           $or: [{ senderId: sender_id }, { receiverId: sender_id }],
+//         },
+//       },
+//     ]);
 
-    // console.log("messagae", message);
-    if (message.length == 0) {
-      res.status(500).json({ Status: "500", message: " Messages not found" });
-    }
-    res
-      .status(200)
-      .json({ Status: "200", message: "User chats", data: message });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      Status: "500",
-      message: "Error while fetching messages",
-      Error: error,
-    });
-  }
-};
+//     console.log("messagae", message);
+//     if (message.length == 0) {
+//       res.status(500).json({ Status: "500", message: " Messages not found" });
+//     }
+//     res
+//       .status(200)
+//       .json({ Status: "200", message: "User chats", data: message });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       Status: "500",
+//       message: "Error while fetching messages",
+//       Error: error,
+//     });
+//   }
+// };
 
 // module.exports.getMessages = async (req, res) => {
 //   try {
@@ -159,3 +159,66 @@ module.exports.getMessages = async (req, res) => {
 //     });
 //   }
 // };
+
+module.exports.getMessages = async (req, res) => {
+  try {
+    const { sender_id, receiver_id } = req.params;
+
+    if (!sender_id || !receiver_id) {
+      return res.status(400).json({
+        Status: "400",
+        message: "Sender ID and Receiver ID are required.",
+      });
+    }
+
+    const sender = await User.findById(sender_id);
+    if (!sender) {
+      return res
+        .status(404)
+        .json({ Status: "404", message: "Sender not found." });
+    }
+    const receiver = await User.findById(receiver_id); // Corrected variable name from 'reciver' to 'receiver'
+    if (!receiver) {
+      return res
+        .status(404)
+        .json({ Status: "404", message: "Receiver not found." });
+    }
+
+    const messages = await Chat.aggregate([
+      {
+        $match: {
+          $or: [
+            { senderId: sender_id, receiverId: receiver_id },
+            { senderId: receiver_id, receiverId: sender_id },
+          ],
+        },
+      },
+      {
+        $sort: { createdAt: 1 },
+      },
+    ]);
+
+    console.log("Fetched messages:", messages);
+
+    if (messages.length === 0) {
+      return res.status(200).json({
+        Status: "200",
+        message: "No messages found between these users.",
+        data: [],
+      });
+    }
+
+    res.status(200).json({
+      Status: "200",
+      message: "User chats retrieved successfully.",
+      data: messages,
+    });
+  } catch (error) {
+    console.error("Error while fetching messages:", error);
+    res.status(500).json({
+      Status: "500",
+      message: "Internal Server Error while fetching messages.",
+      Error: error.message,
+    });
+  }
+};

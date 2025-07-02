@@ -1,4 +1,7 @@
 PORT=5000
 MONGO_URI="mongodb+srv://ayushdongre853:wuLu1Ost6iuoAUZn@cluster0.hakt05s.mongodb.net/"
+# MONGO_URI="mongodb://localhost:27017/socialMedia"
 JWT_SECRET=myStrongSecretKey2802
 JWT_EXPIRE=6h
+# BASE_URL=https://talksy-xzl6.onrender.com
+BASE_URL=http://localhost:5000

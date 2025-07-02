@@ -111,7 +111,7 @@
                     })
                 });
 
-                const data = await response.json();
+                const data = await response.json(); 
 
                 if (response.ok) {
                     alert("Login successful!");
@@ -121,7 +121,7 @@
                     localStorage.setItem("name", data.user.userName);
                     localStorage.setItem("userProfilePhoto", data.user.userProfilePhoto);
 
-                    window.location.href = "/chatPage.html";
+                    window.location.href = "/src/public/chatPage.html";
                 } else {
                     alert(data.message || "Login failed. Invalid credentials.");
                 }
