@@ -177,7 +177,7 @@ module.exports.getMessages = async (req, res) => {
         .status(404)
         .json({ Status: "404", message: "Sender not found." });
     }
-    const receiver = await User.findById(receiver_id); // Corrected variable name from 'reciver' to 'receiver'
+    const receiver = await User.findById(receiver_id);
     if (!receiver) {
       return res
         .status(404)
@@ -198,8 +198,6 @@ module.exports.getMessages = async (req, res) => {
       },
     ]);
 
-    console.log("Fetched messages:", messages);
-
     if (messages.length === 0) {
       return res.status(200).json({
         Status: "200",
@@ -214,7 +212,6 @@ module.exports.getMessages = async (req, res) => {
       data: messages,
     });
   } catch (error) {
-    console.error("Error while fetching messages:", error);
     res.status(500).json({
       Status: "500",
       message: "Internal Server Error while fetching messages.",

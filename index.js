@@ -40,6 +40,8 @@ io.on("connection", async (socket) => {
 
   socket.on("registerUser", async (myId) => {
     userIdForThisSocket = myId;
+    console.log(userIdForThisSocket);
+
     socket.userId = myId;
     let userSockets = activeConnection.get(myId);
     if (!userSockets) {
@@ -48,8 +50,8 @@ io.on("connection", async (socket) => {
     }
     userSockets.add(socket.id);
 
-    // console.log(`User ${myId} registered with socket ${socket.id}`);
-    // console.log("Active Connections:", activeConnection);
+    console.log(`User ${myId} registered with socket ${socket.id}`);
+    console.log("Active Connections:", activeConnection);
     const friendsOfConnectedUser = await friendRequest.find({
       $or: [{ receiver: myId }, { sender: myId }],
       status: "accepted",
@@ -64,6 +66,8 @@ io.on("connection", async (socket) => {
         activeConnection.has(friendId) &&
         activeConnection.get(friendId).size > 0
     );
+    console.log(onlineFriendIdsForNewUser);
+
     socket.emit("onlineFriends", onlineFriendIdsForNewUser);
 
     for (const friendId of friendIdsOfConnectedUser) {
