@@ -142,6 +142,7 @@
         width: 12px;
         height: 12px;
         border-radius: 50%;
+        margin-right: 5px; /* Added for spacing */
       }
 
       .online {
@@ -260,18 +261,17 @@
       let username = localStorage.getItem("name");
       let userPhoto = localStorage.getItem("userProfilePhoto");
       let selectedUser = null;
-      let allUsers = [];
-      let onlineFriends = [];
+      let allFriends = [];
+      let onlineFriendIds = [];
 
-      // Display user info
       document.getElementById("userNameDisplay").textContent =
         username || "User";
-      // if (userPhoto) {
-      //   document.getElementById("userPhoto").src = `/uploads/DP/${userPhoto}`;
-      // } else {
-      //   document.getElementById("userPhoto").src =
-      //     "https://via.placeholder.com/40";
-      // }
+      if (userPhoto) {
+        document.getElementById("userPhoto").src = `/uploads/DP/${userPhoto}`;
+      } else {
+        document.getElementById("userPhoto").src =
+          "https://via.placeholder.com/40";
+      }
 
       const chatForm = document.getElementById("chatForm");
       const messages = document.getElementById("messages");
@@ -295,63 +295,111 @@
 
       function initChat() {
         socket = io("https://talksy-xzl6.onrender.com");
-        socket.emit("registeUser", myId);
+        // socket = io("http://localhost:5000");
+        socket.emit("registerUser", myId);
+        console.log("g", myId);
 
         socket.on("receivePrivateMessage", (data) => {
-          //   console.log(data);
+          console.log("Received private message:", data);
+
           const isCurrentChat =
             selectedUser &&
             ((data.senderId === selectedUser._id && data.receiverId === myId) ||
               (data.senderId === myId && data.receiverId === selectedUser._id));
+
           if (isCurrentChat) {
             const sender =
               data.senderId === myId ? "You" : selectedUser.userName;
-            addMessage(`${sender}: ${data.message}`);
-          }
-          if (
-            !allUsers.find(
-              (u) => u._id === data.senderId || u._id === data.receiverId
-            )
-          ) {
-            loadAllUsers();
+            let messageContent = data.message;
+
+            if (data.attachments && data.attachments.length > 0) {
+              const fileName = messageContent.substring(
+                messageContent.indexOf(":") + 2
+              );
+              messageContent = `${sender} sent a file: <a href="${data.attachments[0]}" target="_blank">${fileName}</a>`;
+              addMessage(messageContent, true);
+            } else {
+              addMessage(`${sender}: ${messageContent}`);
+            }
           }
         });
 
-        socket.on("onlineFriends", (onlineFriendIds) => {
-          onlineFriends = onlineFriendIds;
-          loadAllUsers();
+        socket.on("onlineFriends", (updatedOnlineFriendIds) => {
+          onlineFriendIds = updatedOnlineFriendIds;
+          console.log("Updated online friends:", onlineFriendIds);
+          loadAllFriendsAndRenderList();
         });
-        // socket.on("receiveNotification", (data) => {
-        //     console.log("Notification received:", data);
-        // });
 
-        loadAllUsers();
+        socket.on("messageBlocked", (data) => {
+          if (selectedUser && selectedUser._id === data.receiverId) {
+            addMessage("Your message was blocked by this user.");
+          }
+        });
+
+        loadAllFriendsAndRenderList();
       }
 
-      async function loadAllUsers() {
-        const res = await fetch(
+      async function loadAllFriendsAndRenderList() {
+        const usersRes = await fetch(
           `https://talksy-xzl6.onrender.com/auth/getAllRegisterUsers`
         );
-        const users = await res.json();
-        allUsers = users.filter(
-          (u) => u._id !== myId && onlineFriends.includes(u._id)
+        const users = await usersRes.json();
+        const allRegisteredUsers = users.filter((u) => u._id !== myId);
+
+        const friendsRes = await fetch(
+          `https://talksy-xzl6.onrender.com/api/friendList/${myId}`
         );
+        console.log("Value of friends before map:", friendsRes);
+        const acceptedFriends = await friendsRes.json();
+        // console.log("Value of friends before map:", acceptedFriends.friends);
+        allFriends = acceptedFriends.friends;
+
+        // const acceptedFriendIds = acceptedFriends.friends.map((f) =>
+        //   f.sender._id === myId ? f.receiver._id : f.sender._id
+        // );
+
+        // // Filter all registered users to get only accepted friends
+        // allFriends = allRegisteredUsers.filter((user) =>
+        //   acceptedFriendIds.includes(user._id)
+        // );
+        console.log(allFriends);
+
         renderUserList();
       }
 
       function renderUserList() {
         const userListDiv = document.getElementById("userList");
         userListDiv.innerHTML = "";
-        if (allUsers.length > 0) {
-          allUsers.forEach((user) => {
+
+        if (allFriends.length > 0) {
+          allFriends.forEach((user) => {
+            const isOnline = onlineFriendIds.includes(user._id);
             const div = document.createElement("div");
-            div.className = "user-item";
-            div.innerText = user.userName;
+            div.className = "friend";
+            console.log("user", user);
             div.onclick = () => selectUser(user);
+
+            const img = document.createElement("img");
+            img.src = user.userProfilePhoto
+              ? `/uploads/DP/${user.userProfilePhoto}`
+              : "https://via.placeholder.com/40";
+            img.alt = "Profile Photo";
+
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "name";
+            nameSpan.textContent = user.userName;
+
+            const statusSpan = document.createElement("span");
+            statusSpan.className = `status ${isOnline ? "online" : "offline"}`;
+            statusSpan.title = isOnline ? "Online" : "Offline";
+
+            div.appendChild(img);
+            div.appendChild(nameSpan);
+            div.appendChild(statusSpan);
             userListDiv.appendChild(div);
           });
         } else {
-          userListDiv.innerHTML = "<p>No friends online.</p>";
+          userListDiv.innerHTML = "<p>No friends found.</p>";
         }
       }
 
@@ -361,24 +409,46 @@
           "chatWith"
         ).innerText = `Chat with: ${user.userName}`;
         messages.innerHTML = "";
-        const res = await fetch(
-          `https://talksy-xzl6.onrender.com/chat/userchat/${myId}/${user._id}`
-        );
-        const response = await res.json();
-        const msgs = response.data || [];
-        msgs.forEach((msg) => {
-          const sender = msg.senderId === myId ? "You" : user.userName;
-          addMessage(`${sender}: ${msg.message}`);
-        });
+
+        try {
+          const res = await fetch(
+            `http://localhost:5000/chat/userchat/${myId}/${user._id}`
+          );
+          console.log(res);
+
+          const response = await res.json();
+          const msgs = response.data || [];
+          msgs.forEach((msg) => {
+            const sender = msg.senderId === myId ? "You" : user.userName;
+            if (msg.attachments && msg.attachments.length > 0) {
+              const fileName = msg.message.substring(
+                msg.message.indexOf(":") + 2
+              );
+              addMessage(
+                `${sender} sent a file: <a href="${msg.attachments[0]}" target="_blank">${fileName}</a>`,
+                true
+              );
+            } else {
+              addMessage(`${sender}: ${msg.message}`);
+            }
+          });
+          messages.scrollTop = messages.scrollHeight;
+        } catch (error) {
+          console.error("Error fetching chat history:", error);
+          addMessage("Error loading chat history.");
+        }
       }
-      function addMessage(msg) {
+
+      function addMessage(msg, isHtml = false) {
         const div = document.createElement("p");
-        div.textContent = msg;
+        if (isHtml) {
+          div.innerHTML = msg;
+        } else {
+          div.textContent = msg;
+        }
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
       }
-
-      //Attachment in msg
 
       document
         .getElementById("fileInput")
@@ -406,10 +476,12 @@
             (response) => {
               if (response.status === "success") {
                 addMessage(
-                  `You sent a file: <a href="${response.fileUrl}" target="_blank">${file.name}</a>`
+                  `You sent a file: <a href="${response.fileUrl}" target="_blank">${file.name}</a>`,
+                  true
                 );
               } else {
                 console.error("Upload failed:", response.error);
+                addMessage(`File upload failed: ${response.error}`);
               }
             }
           );
@@ -421,9 +493,10 @@
 
       if (myId) {
         initChat();
+        // console.log("initChat called");
       } else {
         alert("Please login first.");
-        window.location.href = "/Social_Media/src/public/login.html";
+        window.location.href = "/src/public/index.html";
       }
     </script>
   </body>

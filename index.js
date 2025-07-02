@@ -40,8 +40,9 @@ io.on("connection", async (socket) => {
 
   socket.on("registerUser", async (myId) => {
     userIdForThisSocket = myId;
-    socket.userId = myId;
+    console.log(userIdForThisSocket);
 
+    socket.userId = myId;
     let userSockets = activeConnection.get(myId);
     if (!userSockets) {
       userSockets = new Set();
@@ -49,33 +50,51 @@ io.on("connection", async (socket) => {
     }
     userSockets.add(socket.id);
 
-    // console.log("Active Connections:", activeConnection);
-
-    // Send online friends
-    const friends = await friendRequest.aggregate([
-      {
-        $match: {
-          $or: [{ receiver: myId }, { sender: myId }],
-          status: "accepted",
-        },
-      },
-    ]);
-
-    const onlineFriends = friends.filter((f) => {
-      const friendId = f.sender === myId ? f.receiver : f.sender;
-      return (
-        activeConnection.has(friendId) &&
-        activeConnection.get(friendId).size > 0
-      );
+    console.log(`User ${myId} registered with socket ${socket.id}`);
+    console.log("Active Connections:", activeConnection);
+    const friendsOfConnectedUser = await friendRequest.find({
+      $or: [{ receiver: myId }, { sender: myId }],
+      status: "accepted",
     });
 
-    const onlineFriendIds = onlineFriends.map((f) =>
-      f.sender === myId ? f.receiver : f.sender
+    const friendIdsOfConnectedUser = friendsOfConnectedUser.map((f) =>
+      f.sender.toString() === myId ? f.receiver.toString() : f.sender.toString()
     );
-    socket.emit("onlineFriends", onlineFriendIds);
+
+    const onlineFriendIdsForNewUser = friendIdsOfConnectedUser.filter(
+      (friendId) =>
+        activeConnection.has(friendId) &&
+        activeConnection.get(friendId).size > 0
+    );
+    console.log(onlineFriendIdsForNewUser);
+
+    socket.emit("onlineFriends", onlineFriendIdsForNewUser);
+
+    for (const friendId of friendIdsOfConnectedUser) {
+      if (activeConnection.has(friendId)) {
+        const friendSockets = activeConnection.get(friendId);
+        if (friendSockets.size > 0) {
+          const friendsOfThisFriend = await friendRequest.find({
+            $or: [{ receiver: friendId }, { sender: friendId }],
+            status: "accepted",
+          });
+          const friendIdsOfThisFriend = friendsOfThisFriend.map((f) =>
+            f.sender.toString() === friendId
+              ? f.receiver.toString()
+              : f.sender.toString()
+          );
+          const onlineFriendIdsForFriend = friendIdsOfThisFriend.filter(
+            (id) =>
+              activeConnection.has(id) && activeConnection.get(id).size > 0
+          );
+          friendSockets.forEach((socketId) => {
+            io.to(socketId).emit("onlineFriends", onlineFriendIdsForFriend);
+          });
+        }
+      }
+    }
   });
 
-  //  block a user
   socket.on("blockUser", async (data) => {
     const blockerId = socket.userId;
     const blockedId = data.blockedId;
@@ -116,7 +135,6 @@ io.on("connection", async (socket) => {
     }
   });
 
-  //attachment
   socket.on("privateFile", async (data, callback) => {
     const { senderId, receiverId, filename, filetype, data: fileBuffer } = data;
 
@@ -125,7 +143,7 @@ io.on("connection", async (socket) => {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    const uniqueName = `${filename}`;
+    const uniqueName = `${Date.now()}_${filename}`;
     const filePath = path.join(uploadDir, uniqueName);
 
     fs.writeFile(filePath, Buffer.from(fileBuffer), async (err) => {
@@ -137,11 +155,10 @@ io.on("connection", async (socket) => {
 
       const fileUrl = `/uploads/chat_files/${uniqueName}`;
 
-      // Save message with attachment
       const chat = new Chat({
         senderId,
         receiverId,
-        message: "",
+        message: `Sent a file: ${filename}`,
         attachments: [fileUrl],
       });
       await chat.save();
@@ -162,28 +179,65 @@ io.on("connection", async (socket) => {
     });
   });
 
-  socket.on("disconnect", () => {
-    // console.log("user disconnected", socket.id);
-    for (const [userId, sockets] of activeConnection.entries()) {
-      if (sockets.has(socket.id)) {
-        sockets.delete(socket.id);
-        if (sockets.size === 0) {
-          activeConnection.delete(userId);
+  socket.on("disconnect", async () => {
+    if (socket.userId) {
+      const userSockets = activeConnection.get(socket.userId);
+      if (userSockets) {
+        userSockets.delete(socket.id);
+        if (userSockets.size === 0) {
+          activeConnection.delete(socket.userId);
+          // console.log(`User ${socket.userId} is now offline.`);
+
+          const friendsOfDisconnectedUser = await friendRequest.find({
+            $or: [{ receiver: socket.userId }, { sender: socket.userId }],
+            status: "accepted",
+          });
+
+          for (const friend of friendsOfDisconnectedUser) {
+            const friendId =
+              friend.sender.toString() === socket.userId
+                ? friend.receiver.toString()
+                : friend.sender.toString();
+            if (activeConnection.has(friendId)) {
+              const friendSockets = activeConnection.get(friendId);
+              if (friendSockets.size > 0) {
+                const friendsOfThisFriend = await friendRequest.find({
+                  $or: [{ receiver: friendId }, { sender: friendId }],
+                  status: "accepted",
+                });
+                const friendIdsOfThisFriend = friendsOfThisFriend.map((f) =>
+                  f.sender.toString() === friendId
+                    ? f.receiver.toString()
+                    : f.sender.toString()
+                );
+                const onlineFriendIdsForFriend = friendIdsOfThisFriend.filter(
+                  (id) =>
+                    activeConnection.has(id) &&
+                    activeConnection.get(id).size > 0
+                );
+                friendSockets.forEach((socketId) => {
+                  io.to(socketId).emit(
+                    "onlineFriends",
+                    onlineFriendIdsForFriend
+                  );
+                });
+              }
+            }
+          }
         }
-        break;
       }
     }
+    // console.log(`Socket ${socket.id} disconnected.`);
+    // console.log("Active Connections:", activeConnection);
   });
 
-  // Listen for notifications sent from clients
   socket.on("sendNotification", async ({ userId, notification }) => {
     const userSockets = activeConnection.get(userId);
-    if (userSockets) {
+    if (userSockets && userSockets.size > 0) {
       userSockets.forEach((socketId) => {
         io.to(socketId).emit("receiveNotification", notification);
       });
     } else {
-      // User offline - save notification in DB
       console.log(
         `User ${userId} is offline. Saving notification in database.`
       );
@@ -224,13 +278,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// app.use((req, res, next) => {
-//   req.io = io;
-//   req.activeConnection = activeConnection;
-//   next();
-// });
-
-// Routes
 app.use("/auth", authRoutes);
 app.use("/post", postRouter);
 app.use("/story", storyRoute);
@@ -243,16 +290,15 @@ app.use("/group", groupRoutes);
 const updateStoryStatus = async (req, res) => {
   const stories = await Story.find();
   let now = new Date();
-  stories.map(async (story) => {
-    // console.log("story : ", story);
+  for (const story of stories) {
     let createTime = new Date(story.createdAt);
-    timedifference = now - createTime;
-    const hoursePassed = Math.floor(timedifference / (1000 * 60));
-    if (hoursePassed >= 1439) {
+    const timeDifference = now - createTime;
+    const minutesPassed = Math.floor(timeDifference / (1000 * 60));
+    if (minutesPassed >= 1440 && story.status !== "0") {
       story.status = "0";
+      await story.save();
     }
-    await story.save();
-  });
+  }
 };
 
 setInterval(updateStoryStatus, 60000);
