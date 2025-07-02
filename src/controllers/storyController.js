@@ -2,6 +2,7 @@ const { default: mongoose, model } = require("mongoose");
 const User = require("../models/authModels");
 const Story = require("../models/storyModels");
 const friendRequest = require("../models/requestModel");
+require("dotenv").config();
 
 /**
  * @swagger
@@ -228,7 +229,8 @@ module.exports.getStoriesForUser = async (req, res) => {
           return {
             user: existUser[0], // Access the first element of the aggregation result
             storyId: friend._id,
-            story: `http://localhost:5000/uploads/story/${friend.userId}/${friend.story}`,
+            story: `${process.env.BASE_URL}/uploads/story/${friend.userId}/${friend.story}`,
+            // story: `http://localhost:5000/uploads/story/${friend.userId}/${friend.story}`,
           };
         }
       }

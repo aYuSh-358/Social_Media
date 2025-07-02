@@ -4,6 +4,7 @@ const User = require("../models/authModels");
 const Comment = require("../models/postCommentsModel");
 const { sendNotification } = require("../utils/sendNotification");
 const fs = require("fs");
+require("dotenv").config();
 
 /**
  * @swagger
@@ -177,7 +178,7 @@ module.exports.createPost = async (req, res) => {
  *                         example: 60e325b7c45b4b0015d0637f
  *                       post:
  *                         type: string
- *                         example: http://localhost:5000/uploads/posts/post.jpg
+ *                         example: https://talksy-xzl6.onrender.com/uploads/posts/post.jpg
  *                       comments:
  *                         type: string
  *                         example: ""
@@ -244,11 +245,12 @@ module.exports.getPosts = async (req, res) => {
       posts.map((post) => {
         data.push({
           id: post._id,
-          post: `http://localhost:5000/uploads/posts/${post.post}`,
+          // post: `http://localhost:5000/uploads/posts/${post.post}`,
+          post: `${process.env.BASE_URL}/uploads/posts/${post.post}`,
           comments: post.comments || "",
           likes: post.likeBy || "",
           userProfile:
-            `http://localhost:5000/uploads/DP/${post.userProfilePhoto}` || "",
+            `${process.env.BASE_URL}/uploads/DP/${post.userProfilePhoto}` || "",
         });
       });
       res
@@ -278,14 +280,14 @@ module.exports.getPosts = async (req, res) => {
       posts.map((post) => {
         data.push({
           postId: post._id,
-          post: `http://localhost:5000/uploads/posts/${post.post}`,
+          post: `${process.env.BASE_URL}/uploads/posts/${post.post}`,
           userId: post.userId,
           comments: post.comments || "",
           likes: post.likeBy || "",
           user: post.user.userName,
           event: post.Event || "",
           userProfile:
-            `http://localhost:5000/uploads/DP/${post.user.userProfilePhoto}` ||
+            `${process.env.BASE_URL}/uploads/DP/${post.user.userProfilePhoto}` ||
             "",
         });
       });
@@ -330,7 +332,7 @@ module.exports.getPosts = async (req, res) => {
 //     posts.map((post) => {
 //       data.push({
 //         id: post._id,
-//         post: `http://localhost:5000/uploads/posts/${post.post}`,
+//         post: `${process.env.BASE_URL}/uploads/posts/${post.post}`,
 //         userId: post.userId,
 //         LikeBy: post.likeBy,
 //       });
@@ -363,7 +365,7 @@ module.exports.getPosts = async (req, res) => {
 //     const data = [];
 //     posts.map((post) => {
 //       data.push({
-//         post: `http://localhost:5000/uploads/posts/${post.post}`,
+//         post: `${process.env.BASE_URL}/uploads/posts/${post.post}`,
 //         userId: post.userId,
 //       });
 //     });

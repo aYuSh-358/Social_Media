@@ -100,7 +100,7 @@
             const password = document.querySelector('input[name="psw"]').value;
 
             try {
-                const response = await fetch("http://localhost:5000/auth/loginUser", {
+                const response = await fetch("https://talksy-xzl6.onrender.com/auth/loginUser", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
