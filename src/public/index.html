@@ -87,14 +87,21 @@
             <input type="password" placeholder="Enter Password" name="psw" required>
 
             <button type="submit">Login</button>
+            
             <label>
                 <input type="checkbox" checked="checked" name="remember"> Remember me
             </label>
         </div>
-        </div>
-    </form>
+    </div>
+</form>
+<button onclick="loginWithMyApp()">Login with Talksy</button>
 
     <script>
+        function loginWithMyApp() {
+        window.location.href =
+          "https://talksy-xzl6.onrender.com/oauth/authorize?response_type=code&client_id=abc123&redirect_uri=http://127.0.0.1:5502/src/public/index.html";
+      }
+
         document.getElementById("loginForm").addEventListener("submit", async function (event) {
             event.preventDefault();
 
