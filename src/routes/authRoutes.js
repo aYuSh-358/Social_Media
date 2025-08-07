@@ -15,11 +15,7 @@ router.post(
   authController.registerUser
 );
 router.get("/getAllRegisterUsers", authController.getAllRegisterUsers);
-// router.get(
-//   "/getRegisterUserById",
-//   verifyToken,
-//   authController.getRegisterUserById
-// );
+
 router.get(
   "/getRegisterUserById/:id",
   verifyToken,
@@ -37,7 +33,6 @@ router.delete(
   verifyToken,
   authController.deleteRegisterUser
 );
-
 // Login Route
 router.post(
   "/loginUser",
