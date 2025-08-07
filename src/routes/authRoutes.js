@@ -4,7 +4,7 @@ const authController = require("../controllers/authController");
 const { body } = require("express-validator");
 const validator = require("../validation");
 const { validationResult } = require("express-validator");
-const verifyToken = require("../middleware/authMiddleware");
+const { verifyToken } = require("../middleware/authMiddleware");
 const { upload } = require("../middleware/multerConfig");
 
 // Register Route
@@ -15,6 +15,11 @@ router.post(
   authController.registerUser
 );
 router.get("/getAllRegisterUsers", authController.getAllRegisterUsers);
+// router.get(
+//   "/getRegisterUserById",
+//   verifyToken,
+//   authController.getRegisterUserById
+// );
 router.get(
   "/getRegisterUserById/:id",
   verifyToken,

@@ -23,11 +23,15 @@ const { Server } = require("socket.io");
 const { sendNotification } = require("./src/utils/sendNotification");
 const Notification = require("./src/models/notificationModels");
 const { swaggerUi, swaggerSpec } = require("./src/middleware/swagger");
+const oauthRoutes = require("./src/routes/oauthRoutes");
 
 const app = express();
 app.use(cors());
 
 connectDB();
+
+app.use(express.urlencoded({ extended: true })); // for x-www-form-urlencoded
+app.use(express.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -278,6 +282,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use("/oauth", oauthRoutes);
 app.use("/auth", authRoutes);
 app.use("/post", postRouter);
 app.use("/story", storyRoute);
