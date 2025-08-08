@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 const OAuthClientSchema = new mongoose.Schema({
-  name: String,
+  name: { type: String, unique: true },
   clientId: { type: String, unique: true },
   clientSecret: String,
   redirectUris: [String],
-  grants: [String], // e.g., ['authorization_code', 'refresh_token']
+  grants: [String],
 });
 
 module.exports = mongoose.model("OAuthClient", OAuthClientSchema);
